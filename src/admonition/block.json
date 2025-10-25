@@ -1,0 +1,48 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "common-wp-blocks/admonition",
+	"version": "0.1.0",
+	"title": "Admonition",
+	"category": "widgets",
+	"icon": "edit",
+    "description": "A customizable note or alert box (Note, Tip, Warning).",
+    "example": {},
+	"supports": {
+		"html": false,
+		"color": {
+			"text": false,
+			"background": true,
+			"gradients": false,
+			"link": false,
+			"__experimentalBorder": {
+				"color": true,
+				"style": false,
+				"width": false
+			}
+		}
+	},
+    "attributes": {
+        "type": {
+            "type": "string",
+            "default": "note"
+        },
+        "title": {
+            "type": "string",
+            "source": "html",
+            "selector": "summary",
+            "default": "Note"
+        },
+        "content": {
+            "type": "string",
+            "source": "html",
+            "selector": "p",
+            "default": "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+        }
+    },
+    "textdomain": "common-wp-blocks",
+    "editorScript": "file:./index.js",
+    "editorStyle": "file:./index.css",
+    "style": "file:./style-index.css",
+    "viewScript": "file:./view.js"
+}

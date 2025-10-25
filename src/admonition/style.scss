@@ -1,0 +1,55 @@
+// src/admonition/style.scss
+
+.wp-block-common-wp-blocks-admonition {
+    // Fallback: If no color is chosen, apply default background
+    background-color: var(--wp--style--color--background, #6b6b6b);
+
+    // Base styling for the <details> and <summary>
+    details {
+        border-left: 5px solid var(--wp--style--border--color, #007cba);
+
+        // Remove the default browser marker/triangle
+        summary {
+            background-color: var(--wp--style--border--color, #007cba);
+            list-style: none;
+            list-style-type: none;
+            cursor: pointer;
+            padding: 0.5em 1em;
+            display: flex; /* Allows icon and title to align */
+            align-items: center;
+        }
+
+        // This is necessary to remove the marker in Firefox/other browsers
+        summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .admonition-title {
+            font-weight: bold;
+            flex-grow: 1; /* Title takes up available space */
+            margin: 0;
+            padding: 0;
+        }
+
+        .admonition-content {
+            padding: 1em;
+            border-top: 1px solid rgba(0, 0, 0, 0.1);
+        }
+    }
+
+    // Front-end icon (we use the ::before pseudo-element on the summary)
+    summary::before {
+        content: "📝"; /* Placeholder for icon based on type (use a font icon/SVG in production) */
+        margin-right: 0.5em;
+    }
+
+    &.admonition-type-note {
+        details {
+            border-left-color: #007cba; // Blue vertical bar
+            background-color: #f0f8ff; // Light blue background
+        }
+        summary {
+            background-color: #e6f3ff; // Slightly darker header
+        }
+    }
+}
