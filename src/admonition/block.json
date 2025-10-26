@@ -32,12 +32,6 @@
             "source": "html",
             "selector": "summary",
             "default": "Note"
-        },
-        "content": {
-            "type": "string",
-            "source": "html",
-            "selector": "p",
-            "default": "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
         }
     },
     "textdomain": "common-wp-blocks",

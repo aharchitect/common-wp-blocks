@@ -11,7 +11,7 @@ import { __ } from '@wordpress/i18n';
  *
  * @see https://developer.wordpress.org/block-editor/reference-guides/packages/packages-block-editor/#useblockprops
  */
-import { useBlockProps, RichText, InspectorControls } from '@wordpress/block-editor';
+import { useBlockProps, RichText, InnerBlocks, InspectorControls } from '@wordpress/block-editor';
 
 import { SelectControl, PanelBody, Icon } from '@wordpress/components';
 
@@ -30,6 +30,14 @@ const ICON_MAP = {
     tip: 'lightbulb',
 };
 
+// Define the blocks you want users to be able to insert inside the admonition
+const ALLOWED_BLOCKS = [
+    'core/paragraph',
+    'core/list',
+    'core/image',
+    'core/button'
+];
+
 /**
  * The edit function describes the structure of your block in the context of the
  * editor. This represents what the editor will render when the block is used.
@@ -39,9 +47,9 @@ const ICON_MAP = {
  * @return {Element} Element to render.
  */
 export default function Edit({ attributes, setAttributes }) {
-    const { type, title, content } = attributes;
+    const { type, title } = attributes;
 
-    // The block wrapper takes the dynamic class
+    // blockProps manages classes and inline styles (for color controls)
     const blockProps = useBlockProps({
         className: `admonition-type-${ type }`,
     });
@@ -62,31 +70,33 @@ export default function Edit({ attributes, setAttributes }) {
                         onChange={(newType) => setAttributes({ type: newType })}
                     />
                 </PanelBody>
+                {/* Color controls will automatically appear here because of block.json supports */}
             </InspectorControls>
 
             {/* 2. Block Content (Editor View) */}
             <div {...blockProps}>
 
-                {/* Header (will become <summary>) */}
+                {/* Header (will become <summary> on save) */}
                 <div className="admonition-header">
                     <Icon icon={ICON_MAP[type]} className="admonition-icon" />
                     <RichText
-                        tagName="h4" // Using h4 for ease of styling in editor
+                        tagName="h4" // Using h4 for ease of styling and mapping to summary
                         value={title}
                         onChange={(newTitle) => setAttributes({ title: newTitle })}
-                        placeholder="Enter Title"
+                        placeholder="Enter Title (e.g., Note)"
                         className="admonition-title"
                     />
                     <Icon icon="arrow-down-alt2" className="admonition-toggle-icon" />
                 </div>
 
-                {/* Body (will become <p> inside <details>) */}
+                {/* Body Content - REPLACED STATIC RICH TEXT WITH INNERBLOCKS */}
                 <div className="admonition-content">
-                    <RichText
-                        tagName="p"
-                        value={content}
-                        onChange={(newContent) => setAttributes({ content: newContent })}
-                        placeholder="Start typing your note content..."
+                    <InnerBlocks
+                        allowedBlocks={ ALLOWED_BLOCKS }
+                        templateLock={ false }
+                        template={ [
+                            [ 'core/paragraph', { placeholder: 'Add your note content here...' } ]
+                        ] }
                     />
                 </div>
             </div>

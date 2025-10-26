@@ -25,23 +25,20 @@ export default function save({ attributes }) {
     // The entire block is wrapped in <details>
     return (
         <details {...blockProps} open>
-            
+
             {/* The summary is the clickable header */}
             <summary className="admonition-header">
                 {/* Note: We rely on CSS to place the icon on the front end */}
-                <RichText.Content 
-                    tagName="summary" 
-                    value={title} 
+                <RichText.Content
+                    tagName="summary"
+                    value={title}
                     className="admonition-title"
                 />
             </summary>
-            
+
             {/* The content is displayed below the summary */}
             <div className="admonition-content">
-                <RichText.Content 
-                    tagName="p" 
-                    value={content} 
-                />
+                <InnerBlocks.Content />
             </div>
         </details>
     );
