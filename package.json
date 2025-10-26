@@ -8,6 +8,7 @@
 	"scripts": {
 		"build": "wp-scripts build --webpack-copy-php --output-path=build/admonition src/admonition/index.js",
         "format": "wp-scripts format",
+		"test": "wp-scripts test-unit-js",
         "lint:css": "wp-scripts lint-style",
         "lint:js": "wp-scripts lint-js",
         "packages-update": "wp-scripts packages-update",

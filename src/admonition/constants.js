@@ -27,12 +27,23 @@ export const ADMONITION_TYPES = {
         label: 'Tip (Green)',
         styles: { primary: '#46b450', blockBg: '#e6ffec', headerBg: '#cce0d0' },
     },
-    // Adding a new type is now trivial
     danger: {
         dashicon: 'explosive',
         defaultTitle: 'Danger',
         label: 'Danger (Red)',
         styles: { primary: '#dc3232', blockBg: '#ffe6e6', headerBg: '#ffcccc' },
+    },
+    info: {
+        dashicon: 'info',
+        defaultTitle: 'Info',
+        label: 'Info (Blue)',
+        styles: { primary: '#007cba', blockBg: '#e6f3ff', headerBg: '#cce7ff' },
+    },
+    example: {
+        dashicon: 'experiment',
+        defaultTitle: 'Example',
+        label: 'Example (Green)',
+        styles: { primary: '#46b450', blockBg: '#e6ffec', headerBg: '#cce0d0' },
     },
 };
 
