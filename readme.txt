@@ -1,19 +1,23 @@
 === Common Wp Blocks ===
 Contributors:      The WordPress Contributors
-Tags:              block
+Tags:              block, admonition, note, custom
 Tested up to:      6.7
 Stable tag:        0.1.0
 License:           GPL-2.0-or-later
 License URI:       https://www.gnu.org/licenses/gpl-2.0.html
 
-Example block scaffolded with Create Block tool.
+Common Wp Blocks: A collection of essential, opinionated Gutenberg blocks.
 
 == Description ==
 
-This is the long description. No limit, and you can use Markdown (as well as in the following sections).
+This plugin provides a collection of useful, highly customizable Gutenberg blocks designed to enhance content structure and presentation in WordPress.
 
-For backwards compatibility, if this section is missing, the full length of the short description will be used, and
-Markdown parsed.
+The first block included is the **Admonition Block**, a flexible note/alert box that supports:
+
+* **Customizable Types:** Note, Warning, Tip, etc., with associated color schemes.
+* **Collapsible Content:** Optional collapsing behavior using the native `<details>` and `<summary>` HTML elements for performance and accessibility.
+* **Custom Icon Support:** Easily replace the default icon by pasting an SVG or Base64 data URL, rendered with CSS masking for duetone consistency.
+* **Full Site Editor (FSE) Color Support:** Colors are exposed in the FSE sidebar for background and border customization.
 
 == Installation ==
 
@@ -37,16 +41,17 @@ Answer to foo bar dilemma.
 
 == Screenshots ==
 
-1. This screen shot description corresponds to screenshot-1.(png|jpg|jpeg|gif). Note that the screenshot is taken from
-the /assets directory or the directory that contains the stable readme.txt (tags or trunk). Screenshots in the /assets
-directory take precedence. For example, `/assets/screenshot-1.png` would win over `/tags/4.3/screenshot-1.png`
-(or jpg, jpeg, gif).
+1. Admonition Block: Shows the default 'Note' style with the icon, title, and content.
 2. This is the second screen shot
 
 == Changelog ==
 
 = 0.1.0 =
-* Release
+* Initial Release: Includes the customizable Admonition Block.
+
+== Credits ==
+
+Icons used within the blocks are provided by [Icons8](https://icons8.com/). Attribution is required by their license terms and the minimum for this simplication.
 
 == Arbitrary section ==
 
