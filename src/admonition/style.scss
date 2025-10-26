@@ -186,27 +186,43 @@ $admonition-config: (
 // Generate specific styles for each admonition type using the map
 @each $type, $config in $admonition-config {
     .wp-block-common-wp-blocks-admonition.admonition-type-#{$type} {
-        // Apply colors to the outer container for non-collapsible blocks
-        border-left-color: map.get($config, primary); // Left bar
-        background-color: map.get($config, block-bg); // Block background
+        // Use a CSS Variable for the border, falling back to the SASS value.
+        // We can't easily override the summary background this way,
+        // but we can make the main block elements configurable.
+        $sass-primary: map.get($config, primary);
+        $sass-block-bg: map.get($config, block-bg);
+        $sass-header-bg: map.get($config, header-bg);
 
-        // Override colors for the <details> element
+        // Define a custom property on the block root that can be overridden by user styles
+        --admonition-primary-color: #{$sass-primary};
+        --admonition-header-color: #{$sass-header-bg};
+        --admonition-block-bg-color: #{$sass-block-bg};
+
+        // 1. Block wrapper style (affected by user's color picker)
+        border-left-color: var(--admonition-primary-color);
+
+        // Background color is handled by the root block styles, but if you need a fallback:
+        // background-color: var(--admonition-block-bg-color);
+
+
+        // 2. <details> element style
         details {
-            border-left-color: map.get($config, primary); // Vertical bar
+            border-left-color: var(--admonition-primary-color);
 
             summary {
-                background-color: map.get($config, header-bg); // Header background
-                color: map.get($config, primary); // Title text color (and Dashicon color/Custom Icon mask color)
+                // The key: Apply the background and text color using the variable defined above.
+                background-color: var(--admonition-header-color);
+                color: var(--admonition-primary-color);
             }
         }
 
-        // Apply colors to the non-collapsible header for consistency
+        // 3. Non-collapsible styles
         &[data-is-collapsible="false"] {
-            border-left-color: map.get($config, primary);
+            border-left-color: var(--admonition-primary-color);
 
             .admonition-header {
-                background-color: map.get($config, header-bg);
-                color: map.get($config, primary);
+                background-color: var(--admonition-header-color);
+                color: var(--admonition-primary-color);
             }
         }
     }

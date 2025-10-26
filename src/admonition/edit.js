@@ -24,7 +24,7 @@ import { SelectControl, PanelBody, Icon, ToggleControl, TextareaControl } from '
 import './editor.scss';
 
 // Import shared constants
-import { ICON_MAP, ALLOWED_BLOCKS } from './constants';
+import { ADMONITION_TYPES, TYPE_OPTIONS, ALLOWED_BLOCKS } from './constants';
 import AdmonitionStructure from './AdmonitionStructure';
 
 /**
@@ -64,8 +64,8 @@ export default function Edit({ attributes, setAttributes }) {
             />
         );
     } else {
-        // Otherwise, use the standard Dashicon for the selected type
-        currentIcon = <Icon icon={ICON_MAP[type]} className="admonition-icon" />;
+        // Use the central map for the icon lookup
+        currentIcon = <Icon icon={ADMONITION_TYPES[type]?.dashicon} className="admonition-icon" />;
     }
     // ----------------------------
 
@@ -73,7 +73,7 @@ export default function Edit({ attributes, setAttributes }) {
         <>
             {/* 1. Inspector Controls for Type Selection */}
             <InspectorControls>
-                <PanelBody title="Note Type & Icon">
+                <PanelBody title="Admonition Type & Icon">
                     {/* 1a. Collapsible Toggle */}
                     <ToggleControl
                         label="Enable Collapsing"
@@ -96,18 +96,20 @@ export default function Edit({ attributes, setAttributes }) {
                     <SelectControl
                         label="Admonition Type (for base styling)"
                         value={type}
-                        options={[
-                            { label: 'Note (Blue)', value: 'note' },
-                            { label: 'Warning (Yellow)', value: 'warning' },
-                            { label: 'Tip (Green)', value: 'tip' },
-                            // Add new types here if desired, e.g.:
-                            // { label: 'Danger (Red)', value: 'danger' },
-                            // { label: 'Info (Cyan)', value: 'info' },
-                        ]}
-                        // Reset custom icon when type changes
-                        onChange={(newType) => setAttributes({ type: newType, customIconData: "" })}
-                    />
+                        // Use the centralized TYPE_OPTIONS
+                        options={TYPE_OPTIONS}
+                        onChange={(newType) => {
+                            // Find the new default title
+                            const newDefaultTitle = ADMONITION_TYPES[newType]?.defaultTitle || 'Note';
 
+                            // Reset custom icon and update type/title simultaneously
+                            setAttributes({
+                                type: newType,
+                                customIconData: "",
+                                title: newDefaultTitle // Set the default title when type changes
+                            });
+                        }}
+                    />
                     {/* Custom Icon Input */}
                     <TextareaControl
                         label="Custom Icon (Paste SVG or Base64 URL)"
