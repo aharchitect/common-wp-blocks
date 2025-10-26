@@ -36,6 +36,14 @@
         "customIconData": {
             "type": "string",
             "default": ""
+        },
+        "isCollapsible": {
+            "type": "boolean",
+            "default": true
+        },
+        "isInitiallyExpanded": {
+            "type": "boolean",
+            "default": true
         }
     },
     "textdomain": "common-wp-blocks",
