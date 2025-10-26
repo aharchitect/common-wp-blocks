@@ -17,11 +17,47 @@
             padding: 0.5em 1em;
             display: flex; /* Allows icon and title to align */
             align-items: center;
+            position: relative; // Needed for ::before positioning
+
+            // This is where we define the icon space
+            &::before {
+                content: "";
+                width: 1.25em; // Standard icon size
+                height: 1.25em;
+                margin-right: 0.5em;
+                // The icon color (always the contrast color)
+                background-color: var(--wp--style--color--border-color, #007cba);
+                display: block;
+                flex-shrink: 0;
+                // Base mask properties
+                mask-repeat: no-repeat;
+                mask-size: contain;
+                mask-position: center;
+            }
         }
 
         // This is necessary to remove the marker in Firefox/other browsers
         summary::-webkit-details-marker {
             display: none;
+        }
+
+        /* 1. Handling the CUSTOM ICON via the data-custom-icon attribute */
+        summary[data-custom-icon]::before {
+            // Inject the custom base64/SVG URL into the mask-image property
+            mask-image: url(attr(data-custom-icon));
+        }
+
+        /* 2. Handling the DEFAULT ICON via the data-default-icon attribute */
+        summary[data-default-icon="edit"]::before {
+            mask-image: url("data:image/png;base64,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");
+        }
+
+        summary[data-default-icon="warning"]::before {
+            mask-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFoAAABaCAYAAAA4qEECAAAACXBIWXMAAAsTAAALEwEAmpwYAAAEB0lEQVR4nO2dTahWRRjHf5ofmF+YYooomopIghC4EAwiaeEiF6KgkpsSEj9QFLJNmYIaGNUiDApyVaKibkw3akSWJHEVhEoqlURDUbPMrPQ2MjAnRDrjfc/MnJk55/nBf3PvZZ7n/+d97znvfWbOBUEQBEEQBEEQBMGJfsBS4Bhw1egL4EXzPcEDw4HjgCrRN8DI2E3mTh+gyxLy/WE/ErvZnFnZg5AL6Z8VKvCY+V3c06CvAyOqFGo773cQcqHtsZvOjSeBOxWCvgtMj918TnxWIeRC+ravV2wDObDAIeRC82ObSJ0BwDkPQf8MPBrbTMq87iHkQq/FNpMqY4A/PAb9JzAutqkU+cRjyIU+jm0qNWYC/wYIWq/5dGxzqdAbOBEg5EJdpkbrWRow5EIv0XIGA5dqCPoyMJQW81YNIRfaRkuZBPxVY9B/A1NoIZ/WGHKhA7SM5yKEXGgOLaEv8H3EoH8A+tMC1kUMudBaGs5I4NcEgv4NGEWD+TCBkAt9QEN5CuiuGMpyYFiJlldcs9v01Dg+d3j1vWxZd5nDul82bey1yPFtvtqy9hrHtRfSoPHUeccw1lvWf9Vx7QvAQBrARscgtDZY1n/Dw/p6jawZC9zyEMQWS42tnsZe48mY3R5CUMDblhrveKqxi0yZ5XE8td3z1rEyPUNm9DZbaX0F8JGl1g6PdU7ltv3X5d5W/Y/0hLyMnZ5r2e7Zk0J/Wrvi2fw+S739nmtdM6cMkuddz8YVcNBS71CAevoCmzRTgX8CGD8aaOdpmfSW4WkkTIhXlwK+stS0HSRy0WESZW4gw8psginjZMC6z5MY+qzfmYCGv7XU/i5g3R9TG3utD2hWAWcttX3sp7bpFRLhceBGYLOXLPV/CVz7d2A0CeDzk5myHG0ro44ZpPYYlRkO4ynVgfQt45slCnE7+aC6jdco9DInoFRLdDzW2GtJAuZVzXqh7pAHARcTMK5qlr7wDqkz6M0JmFaRpL3XwhPA7QQMq0jS238n1xH03kgGb5nR2Eaj3Z7mkb7/bOuFZyMZO2/eSQ8y0ZySjdHT7JBPgzkdydQiS1+LI/V02mTinRWRDClggqWv0RH70plEfRqMb4239DYqYl/XTDbeeC+iGfWQ/XGu+/pcpbPxwrSKT4PxfTGcWHKyK9bF0PvY63BkI+q+bVt7gE1Ge8zXVAI64hryvARMqEyks6qEHuH8lIABlYnOVh171XEYXjVMOrOOOZZA4yoz6aMaHXM9gcZVZtL31R1zM4HGVWbS5xc75usEGlcZjrs6ZlUCjavMVOmJv/0Db7dSDdNJl6ez62fRSdj0KGSdlRP9zFtC//6RCyT/6abZ5aqzkf8zIAiCIAiCIAiCIAgCbeIeKS6tsZ2f6DkAAAAASUVORK5CYII=");
+        }
+
+        summary[data-default-icon="lightbulb"]::before {
+            mask-image: url("data:image/png;base64,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");
         }
 
         .admonition-title {
