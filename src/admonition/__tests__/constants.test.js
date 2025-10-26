@@ -17,6 +17,32 @@ describe('Admonition Constants', () => {
         expect(ADMONITION_TYPES.danger).toHaveProperty('dashicon', 'explosive');
     });
 
+    // Verify all required parameters are present for every type
+    it('should ensure all required parameters (including styles) are set for every type', () => {
+        const REQUIRED_TOP_LEVEL_KEYS = ['dashicon', 'defaultTitle', 'label', 'styles'];
+        const REQUIRED_STYLE_KEYS = ['primary', 'blockBg', 'headerBg'];
+
+        Object.keys(ADMONITION_TYPES).forEach(type => {
+            const config = ADMONITION_TYPES[type];
+
+            // 1. Check top-level keys
+            REQUIRED_TOP_LEVEL_KEYS.forEach(key => {
+                // Assert that the property exists. We don't check the value here.
+                // The error message will show the key that is missing if it doesn't exist.
+                expect(config).toHaveProperty(key);
+            });
+
+            // 2. Check nested 'styles' keys for existence
+            const styles = config.styles;
+            expect(typeof styles).toBe('object'); // Ensure styles is an object before checking keys
+
+            REQUIRED_STYLE_KEYS.forEach(key => {
+                // Assert that the property exists within the styles object.
+                expect(styles).toHaveProperty(key);
+            });
+        });
+    });
+
     it('all ADMONITION_TYPES objects should have the required keys (for structural integrity)', () => {
         const requiredKeys = ['dashicon', 'defaultTitle', 'label', 'styles'];
 
