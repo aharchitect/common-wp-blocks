@@ -3,11 +3,26 @@
 	"apiVersion": 3,
 	"name": "common-wp-blocks/admonition",
 	"version": "0.1.0",
-	"title": "Admonition",
-	"category": "widgets",
-	"icon": "edit",
-    "description": "A customizable note or alert box (Note, Tip, Warning).",
-    "example": {},
+	"title": "Admonition (Note, Tip, Warning)",
+    "category": "design",
+    "icon": "lightbulb",
+    "description": "A visually distinct, collapsible block for notes, tips, and warnings.",
+    "example": {
+        "attributes": {
+            "type": "note",
+            "title": "A Friendly Note",
+            "isCollapsible": true,
+            "isInitiallyExpanded": false
+        },
+        "innerBlocks": [
+            {
+                "name": "core/paragraph",
+                "attributes": {
+                    "content": "Use this block to highlight important information for your readers."
+                }
+            }
+        ]
+    },
 	"supports": {
 		"html": false,
 		"color": {
@@ -20,7 +35,10 @@
 				"style": false,
 				"width": false
 			}
-		}
+		},
+        "typography": {
+            "fontSize": true
+        }
 	},
     "attributes": {
         "type": {
@@ -49,6 +67,5 @@
     "textdomain": "common-wp-blocks",
     "editorScript": "file:./index.js",
     "editorStyle": "file:./index.css",
-    "style": "file:./style-index.css",
-    "viewScript": "file:./view.js"
+    "style": "file:./style-index.css"
 }

@@ -1,5 +1,5 @@
 === Common Wp Blocks ===
-Contributors:      The WordPress Contributors
+Contributors:      The WordPress Contributors and aharchitect
 Tags:              block, admonition, note, custom
 Tested up to:      6.7
 Stable tag:        0.1.0

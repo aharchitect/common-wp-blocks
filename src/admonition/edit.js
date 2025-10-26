@@ -100,14 +100,18 @@ export default function Edit({ attributes, setAttributes }) {
                             { label: 'Note (Blue)', value: 'note' },
                             { label: 'Warning (Yellow)', value: 'warning' },
                             { label: 'Tip (Green)', value: 'tip' },
+                            // Add new types here if desired, e.g.:
+                            // { label: 'Danger (Red)', value: 'danger' },
+                            // { label: 'Info (Cyan)', value: 'info' },
                         ]}
+                        // Reset custom icon when type changes
                         onChange={(newType) => setAttributes({ type: newType, customIconData: "" })}
                     />
 
                     {/* Custom Icon Input */}
                     <TextareaControl
                         label="Custom Icon (Paste SVG or Base64 URL)"
-                        help="Enter the full SVG data URL (e.g., data:image/svg+xml;utf8,...)"
+                        help="Enter the full SVG or Base64 data URL (e.g., data:image/svg+xml;utf8,...). This will override the default icon."
                         value={customIconData}
                         onChange={(newIconData) => setAttributes({ customIconData: newIconData })}
                     />
@@ -123,10 +127,10 @@ export default function Edit({ attributes, setAttributes }) {
                     isCollapsible={isCollapsible}
                     isOpen={editorOpenState}
                     titleTagName="h4"
-                    iconElement={iconElement}
+                    iconElement={currentIcon}
                     mode="edit"
-                    // Pass setAttributes for the RichText title to work
-                    setAttributes={(newAttr) => setAttributes({ title: newAttr })}
+                    // Pass a function that correctly calls setAttributes for the title
+                    setAttributes={(newTitle) => setAttributes({ title: newTitle })}
                 />
             </div>
         </>
