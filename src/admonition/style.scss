@@ -1,4 +1,5 @@
 // --- Admonition Block Styles (Refactored to use a single configuration map) ---
+@use "sass:map";
 
 // Define the core configuration map for all admonition types.
 // Each type defines its custom:
@@ -186,26 +187,26 @@ $admonition-config: (
 @each $type, $config in $admonition-config {
     .wp-block-common-wp-blocks-admonition.admonition-type-#{$type} {
         // Apply colors to the outer container for non-collapsible blocks
-        border-left-color: map-get($config, primary); // Left bar
-        background-color: map-get($config, block-bg); // Block background
+        border-left-color: map.get($config, primary); // Left bar
+        background-color: map.get($config, block-bg); // Block background
 
         // Override colors for the <details> element
         details {
-            border-left-color: map-get($config, primary); // Vertical bar
+            border-left-color: map.get($config, primary); // Vertical bar
 
             summary {
-                background-color: map-get($config, header-bg); // Header background
-                color: map-get($config, primary); // Title text color (and Dashicon color/Custom Icon mask color)
+                background-color: map.get($config, header-bg); // Header background
+                color: map.get($config, primary); // Title text color (and Dashicon color/Custom Icon mask color)
             }
         }
 
         // Apply colors to the non-collapsible header for consistency
         &[data-is-collapsible="false"] {
-            border-left-color: map-get($config, primary);
+            border-left-color: map.get($config, primary);
 
             .admonition-header {
-                background-color: map-get($config, header-bg);
-                color: map-get($config, primary);
+                background-color: map.get($config, header-bg);
+                color: map.get($config, primary);
             }
         }
     }
