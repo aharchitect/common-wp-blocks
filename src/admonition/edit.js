@@ -13,7 +13,7 @@ import { __ } from '@wordpress/i18n';
  */
 import { useBlockProps, RichText, InnerBlocks, InspectorControls } from '@wordpress/block-editor';
 
-import { SelectControl, PanelBody, Icon } from '@wordpress/components';
+import { SelectControl, PanelBody, Icon, TextareaControl } from '@wordpress/components';
 
 /**
  * Lets webpack process CSS, SASS or SCSS files referenced in JavaScript files.
@@ -47,27 +47,52 @@ const ALLOWED_BLOCKS = [
  * @return {Element} Element to render.
  */
 export default function Edit({ attributes, setAttributes }) {
-    const { type, title } = attributes;
+    const { type, title, customIconData } = attributes;
 
     // blockProps manages classes and inline styles (for color controls)
     const blockProps = useBlockProps({
         className: `admonition-type-${ type }`,
     });
 
+    // --- Icon Rendering Logic ---
+    let currentIcon;
+    if (customIconData) {
+        // If custom data exists, use a simple div with the CSS mask applied
+        currentIcon = (
+            <div
+                className="admonition-icon custom-mask-icon"
+                style={{ maskImage: `url("${customIconData}")` }}
+            />
+        );
+    } else {
+        // Otherwise, use the standard Dashicon for the selected type
+        currentIcon = <Icon icon={ICON_MAP[type]} className="admonition-icon" />;
+    }
+    // ----------------------------
+
     return (
         <>
             {/* 1. Inspector Controls for Type Selection */}
             <InspectorControls>
-                <PanelBody title="Note Type">
+                <PanelBody title="Note Type & Icon">
+                    {/* Standard Type Selector */}
                     <SelectControl
-                        label="Admonition Type"
+                        label="Admonition Type (for base styling)"
                         value={type}
                         options={[
                             { label: 'Note (Blue)', value: 'note' },
                             { label: 'Warning (Yellow)', value: 'warning' },
                             { label: 'Tip (Green)', value: 'tip' },
                         ]}
-                        onChange={(newType) => setAttributes({ type: newType })}
+                        onChange={(newType) => setAttributes({ type: newType, customIconData: "" })}
+                    />
+
+                    {/* Custom Icon Input */}
+                    <TextareaControl
+                        label="Custom Icon (Paste SVG or Base64 URL)"
+                        help="Enter the full SVG data URL (e.g., data:image/svg+xml;utf8,...)"
+                        value={customIconData}
+                        onChange={(newIconData) => setAttributes({ customIconData: newIconData })}
                     />
                 </PanelBody>
                 {/* Color controls will automatically appear here because of block.json supports */}
@@ -78,7 +103,7 @@ export default function Edit({ attributes, setAttributes }) {
 
                 {/* Header (will become <summary> on save) */}
                 <div className="admonition-header">
-                    <Icon icon={ICON_MAP[type]} className="admonition-icon" />
+                    {currentIcon}
                     <RichText
                         tagName="h4" // Using h4 for ease of styling and mapping to summary
                         value={title}

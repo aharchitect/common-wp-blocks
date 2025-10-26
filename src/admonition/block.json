@@ -32,6 +32,10 @@
             "source": "html",
             "selector": "summary",
             "default": "Note"
+        },
+        "customIconData": {
+            "type": "string",
+            "default": ""
         }
     },
     "textdomain": "common-wp-blocks",
