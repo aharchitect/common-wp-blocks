@@ -7,15 +7,21 @@
 	"main": "build/index.js",
 	"scripts": {
 		"build": "wp-scripts build --webpack-copy-php --output-path=build/admonition src/admonition/index.js",
-        "format": "wp-scripts format",
+		"format": "wp-scripts format",
 		"test": "wp-scripts test-unit-js",
-        "lint:css": "wp-scripts lint-style",
-        "lint:js": "wp-scripts lint-js",
-        "packages-update": "wp-scripts packages-update",
-        "plugin-zip": "wp-scripts plugin-zip",
-        "start": "wp-scripts start --webpack-copy-php --output-path=build/admonition src/admonition/index.js"
+		"lint:css": "wp-scripts lint-style",
+		"lint:js": "wp-scripts lint-js",
+		"packages-update": "wp-scripts packages-update",
+		"plugin-zip": "wp-scripts plugin-zip",
+		"start": "wp-scripts start --webpack-copy-php --output-path=build/admonition src/admonition/index.js"
 	},
 	"devDependencies": {
-		"@wordpress/scripts": "^30.26.0"
+		"@wordpress/scripts": "^30.26.0",
+		"jest-transform-stub": "^2.0.0"
+	},
+	"dependencies": {
+		"@testing-library/jest-dom": "^6.9.1",
+		"@testing-library/react": "^16.3.0",
+		"@wordpress/block-editor": "^15.6.0"
 	}
 }
