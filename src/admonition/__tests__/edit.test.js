@@ -1,5 +1,3 @@
-// src/admonition/__tests__/edit.test.js
-
 import { render, fireEvent, screen } from '@testing-library/react';
 import '@testing-library/jest-dom'; // for assertions like toHaveClass
 

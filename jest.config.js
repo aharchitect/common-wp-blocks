@@ -1,5 +1,3 @@
-// jest.config.js
-
 const path = require('path');
 const configDir = 'node_modules/@wordpress/scripts/config';
 
