@@ -4,7 +4,7 @@
  *
  * @see https://developer.wordpress.org/block-editor/reference-guides/packages/packages-block-editor/#useblockprops
  */
-import { useBlockProps, RichText, InnerBlocks } from '@wordpress/block-editor';
+import { useBlockProps } from '@wordpress/block-editor';
 
 // Import shared constants
 import { ICON_MAP } from './constants';
@@ -15,8 +15,8 @@ import AdmonitionStructure from './AdmonitionStructure';
  * be combined into the final markup, which is then serialized by the block
  * editor into `post_content`.
  *
- * @param  root0
- * @param  root0.attributes
+ * @param {Object} root0
+ * @param {Object} root0.attributes
  * @see https://developer.wordpress.org/block-editor/reference-guides/block-api/block-edit-save/#save
  *
  * @return {Element} Element to render.

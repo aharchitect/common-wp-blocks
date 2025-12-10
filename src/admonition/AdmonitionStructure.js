@@ -1,6 +1,8 @@
 import { RichText, InnerBlocks } from '@wordpress/block-editor';
 import { Icon } from '@wordpress/components'; // Needed for the editor's toggle icon
 
+/* eslint-disable jsdoc/check-line-alignment */
+
 /**
  * Reusable component for the Admonition block's core HTML structure.
  * This component handles the <details>/<summary> structure and content placement.
@@ -13,7 +15,7 @@ import { Icon } from '@wordpress/components'; // Needed for the editor's toggle 
  * @param {string}  props.titleTagName  - Tag name for the title (h4 in edit, summary in save).
  * @param {Element} props.iconElement   - The icon element (Dashicon in edit, or empty in save).
  * @param {string}  props.mode          - 'edit' or 'save' to determine RichText usage.
- * @param           props.setAttributes
+ * @param {Function} props.setAttributes
  * @return {Element} The JSX structure.
  */
 export default function AdmonitionStructure( {

@@ -1,9 +1,7 @@
 /**
- * Retrieves the translation of text.
- *
- * @see https://developer.wordpress.org/block-editor/reference-guides/packages/packages-i18n/
+ * (i18n helper removed) Translation helper is not used in this file.
+ * If you need translation in the future, re-add `__` from '@wordpress/i18n'.
  */
-import { __ } from '@wordpress/i18n';
 
 /**
  * React hook that is used to mark the block wrapper element.
@@ -11,12 +9,7 @@ import { __ } from '@wordpress/i18n';
  *
  * @see https://developer.wordpress.org/block-editor/reference-guides/packages/packages-block-editor/#useblockprops
  */
-import {
-	useBlockProps,
-	RichText,
-	InnerBlocks,
-	InspectorControls,
-} from '@wordpress/block-editor';
+import { useBlockProps, InspectorControls } from '@wordpress/block-editor';
 
 import {
 	SelectControl,
@@ -25,6 +18,8 @@ import {
 	ToggleControl,
 	TextareaControl,
 } from '@wordpress/components';
+
+/* eslint-disable jsdoc/check-line-alignment */
 
 /**
  * Lets webpack process CSS, SASS or SCSS files referenced in JavaScript files.
@@ -35,16 +30,16 @@ import {
 import './editor.scss';
 
 // Import shared constants
-import { ADMONITION_TYPES, TYPE_OPTIONS, ALLOWED_BLOCKS } from './constants';
+import { ADMONITION_TYPES, TYPE_OPTIONS } from './constants';
 import AdmonitionStructure from './AdmonitionStructure';
 
 /**
  * The edit function describes the structure of your block in the context of the
  * editor. This represents what the editor will render when the block is used.
  *
- * @param  root0
- * @param  root0.attributes
- * @param  root0.setAttributes
+ * @param {Object} root0
+ * @param {Object} root0.attributes
+ * @param {Function} root0.setAttributes
  * @see https://developer.wordpress.org/block-editor/reference-guides/block-api/block-edit-save/#edit
  *
  * @return {Element} Element to render.

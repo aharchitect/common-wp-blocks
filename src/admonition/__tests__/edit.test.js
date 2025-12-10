@@ -2,7 +2,7 @@ import { render, fireEvent, screen } from '@testing-library/react';
 import '@testing-library/jest-dom'; // for assertions like toHaveClass
 
 import Edit from '../edit';
-import { ADMONITION_TYPES, TYPE_OPTIONS } from '../constants';
+import { ADMONITION_TYPES } from '../constants';
 
 // --- MOCKING WORDPRESS AND CHILD COMPONENTS ---
 // AdmonitionStructure is the component that uses RichText and InnerBlocks.
@@ -186,7 +186,7 @@ describe( 'Edit', () => {
 
 	// --- TEST 4 - 7: Collapsible State Logic ---
 	it( 'should calculate editorOpenState correctly based on isCollapsible=false, isInitiallyExpanded=true -> Should be OPEN', () => {
-		const { rerender } = render(
+		render(
 			<Edit
 				attributes={ mockAttributes }
 				setAttributes={ mockSetAttributes }
