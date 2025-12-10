@@ -1,9 +1,8 @@
-// --- Admonition Block Styles (Refactored to use a single configuration map) ---
 @use "sass:map";
 
-// Define the core configuration map for all admonition types.
-// Each type defines its custom:
-// - icon: Base64 Data URI for the header icon
+/* Define the core configuration map for all admonition types.
+   Each type defines its custom:
+   - icon: Base64 Data URI for the header icon; */
 $admonition-config: (
     "lightbulb": (
         primary: #007cba,
@@ -49,13 +48,13 @@ $admonition-config: (
     )
 );
 
-// Base class for the entire block (div)
+/* Base class for the entire block (div) */
 .wp-block-common-wp-blocks-admonition {
-    // Fallback block background color
+    /* Fallback block background color */
     background-color: var(--wp--style--color--background, #ffffff);
     padding: 0;
 
-    // --- ICON/HEADER STYLES FOR BOTH <DETAILS> AND NON-COLLAPSIBLE ---
+    /* --- ICON/HEADER STYLES FOR BOTH <DETAILS> AND NON-COLLAPSIBLE --- */
     .admonition-header {
         position: relative;
         display: flex;
@@ -63,48 +62,48 @@ $admonition-config: (
         font-weight: bold;
     }
 
-    // 1. Custom Icon Logic: When custom icon is used (via CSS variable)
-    // The CSS variable is now set on the main block wrapper in save.js
-    &[data-is-collapsible="true"] summary[data-has-custom-icon="true"]::before, // Collapsible
-    &[data-is-collapsible="false"] .admonition-header[data-has-custom-icon="true"]::before { // Non-Collapsible
-        // Uses the CSS variable injected by the block's script
+    /* 1. Custom Icon Logic: When custom icon is used (via CSS variable)
+       The CSS variable is now set on the main block wrapper in save.js */
+    &[data-is-collapsible="true"] summary[data-has-custom-icon="true"]::before,
+    &[data-is-collapsible="false"] .admonition-header[data-has-custom-icon="true"]::before {
+        /* Uses the CSS variable injected by the block's script */
         mask-image: var(--admonition-icon-mask);
         mask-size: contain;
         mask-repeat: no-repeat;
         mask-position: center;
-        // Icon color takes color from the surrounding text/header
+        /* Icon color takes color from the surrounding text/header */
         background-color: currentColor;
-        font-family: inherit; // Override dashicons font if it was previously set
+        font-family: inherit; /* Override dashicons font if it was previously set */
         content: "";
-        font-size: 1.25em; // Standard size from details/summary styles
+        font-size: 1.25em; /* Standard size from details/summary styles */
     }
 
-    // 2. Default Icon Logic: Use a Dashicon font for default types
+    /* 2. Default Icon Logic: Use a Dashicon font for default types */
     summary[data-default-icon]:not([data-default-icon=""])::before,
     .admonition-header[data-default-icon]:not([data-default-icon=""])::before {
         font-family: 'dashicons';
         content: attr(data-default-icon);
         mask: none;
-        background-color: unset; // Rely on color inheritance
-        color: inherit; // Inherit the summary text color
+        background-color: unset;
+        color: inherit;
         font-size: 1.25em;
         line-height: 1;
     }
 
 
-    // --- COLLAPSIBLE BLOCK STYLES (<DETAILS>/<SUMMARY> STRUCTURE) ---
+    /* --- COLLAPSIBLE BLOCK STYLES (<DETAILS>/<SUMMARY> STRUCTURE) --- */
     details {
-        // Fallback border color, will be overridden by the type classes below.
+        /* Fallback border color, will be overridden by the type classes below. */
         border-left: 5px solid var(--wp--style--border--color, #007cba);
-        overflow: hidden; // Ensures content respects border radius if added
+        overflow: hidden; /* Ensures content respects border radius if added */
 
-        // Collapsible only styles
+        /* Collapsible only styles */
         &[open] .admonition-content {
-             border-top: 1px solid rgba(0, 0, 0, 0.1);
+            border-top: 1px solid rgba(0, 0, 0, 0.1);
         }
 
         summary {
-            // Fallback header background color
+            /* Fallback header background color */
             background-color: var(--wp--style--border--color, #e6f3ff);
             list-style: none;
             list-style-type: none;
@@ -113,15 +112,15 @@ $admonition-config: (
             display: flex;
             align-items: center;
             position: relative;
-            user-select: none; // Prevent selection of title text on click
+            user-select: none; /* Prevent selection of title text on click */
 
-            // Define the icon space/styles for ::before
+            /* Define the icon space/styles for ::before */
             &::before {
-                // Shared icon properties
+                /* Shared icon properties */
                 width: 1.25em;
                 height: 1.25em;
                 margin-right: 0.5em;
-                background-color: currentColor; // Sets the icon color (mask fill)
+                background-color: currentColor; /* Sets the icon color (mask fill) */
                 display: block;
                 flex-shrink: 0;
                 mask-repeat: no-repeat;
@@ -129,7 +128,7 @@ $admonition-config: (
                 mask-position: center;
             }
 
-            // Remove the marker in Firefox/other browsers
+            /* Remove the marker in Firefox/other browsers */
             &::-webkit-details-marker {
                 display: none;
             }
@@ -147,17 +146,16 @@ $admonition-config: (
         }
     }
 
-    // --- NON-COLLAPSIBLE BLOCK STYLES (DIV/H3 STRUCTURE) ---
-    // Targets the structure when collapsing is disabled.
+    /* --- NON-COLLAPSIBLE BLOCK STYLES (DIV/H3 STRUCTURE) ---
+       Targets the structure when collapsing is disabled. */
     &[data-is-collapsible="false"] {
-        // Inherit the details structure styles for appearance consistency
+        /* Inherit the details structure styles for appearance consistency */
         border-left: 5px solid var(--wp--style--border--color, #007cba);
 
         .admonition-header {
-             // Mimic summary header styles
             background-color: var(--wp--style--border--color, #e6f3ff);
             padding: 0.5em 1em;
-            pointer-events: none; // Disable interaction on the header
+            pointer-events: none; /* Disable interaction on the header */
             cursor: default;
 
             .admonition-title {
@@ -167,12 +165,12 @@ $admonition-config: (
 
         .admonition-content {
             padding: 1em;
-            border-top: none; // No border if there's no collapse
+            border-top: none; /* No border if there's no collapse */
         }
     }
 
-    // Collapsible state animations (Editor only toggle icon)
-    // The details open/close effect is handled by the browser
+    /* Collapsible state animations (Editor only toggle icon)
+   The details open/close effect is handled by the browser */
     &[data-is-collapsible="true"] {
         .admonition-toggle-icon {
             transition: transform 0.2s ease;
@@ -183,40 +181,43 @@ $admonition-config: (
     }
 }
 
-// Generate specific styles for each admonition type using the map
+/* Generate specific styles for each admonition type using the map */
 @each $type, $config in $admonition-config {
     .wp-block-common-wp-blocks-admonition.admonition-type-#{$type} {
-        // Use a CSS Variable for the border, falling back to the SASS value.
-        // We can't easily override the summary background this way,
-        // but we can make the main block elements configurable.
+        /* Use a CSS Variable for the border, falling back to the SASS value.
+           We can't easily override the summary background this way,
+           but we can make the main block elements configurable. */
         $sass-primary: map.get($config, primary);
         $sass-block-bg: map.get($config, block-bg);
         $sass-header-bg: map.get($config, header-bg);
 
-        // Define a custom property on the block root that can be overridden by user styles
+        /* Define a custom property on the block root that can be overridden by user styles */
         --admonition-primary-color: #{$sass-primary};
         --admonition-header-color: #{$sass-header-bg};
         --admonition-block-bg-color: #{$sass-block-bg};
 
-        // 1. Block wrapper style (affected by user's color picker)
+        /* 1. Block wrapper style (affected by user's color picker) */
         border-left-color: var(--admonition-primary-color);
 
-        // Background color is handled by the root block styles, but if you need a fallback:
-        // background-color: var(--admonition-block-bg-color);
+        /* Use a CSS variable for the border, falling back to the SASS value.
+              This allows the block color picker to override `--admonition-primary-color`. */
+
+        /* Background color is handled by the root block styles, but if you need a fallback:
+              background-color: var(--admonition-block-bg-color); */
 
 
-        // 2. <details> element style
+        /* 2. <details> element style */
         details {
             border-left-color: var(--admonition-primary-color);
 
             summary {
-                // The key: Apply the background and text color using the variable defined above.
+                /* The key: Apply the background and text color using the variable defined above. */
                 background-color: var(--admonition-header-color);
                 color: var(--admonition-primary-color);
             }
         }
 
-        // 3. Non-collapsible styles
+        /* 3. Non-collapsible styles */
         &[data-is-collapsible="false"] {
             border-left-color: var(--admonition-primary-color);
 

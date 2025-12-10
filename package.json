@@ -17,11 +17,21 @@
 	},
 	"devDependencies": {
 		"@wordpress/scripts": "^30.27.0",
-		"jest-transform-stub": "^2.0.0"
+		"jest-transform-stub": "^2.0.0",
+		"postcss-scss": "^4.0.9"
 	},
 	"dependencies": {
 		"@testing-library/jest-dom": "^6.9.1",
 		"@testing-library/react": "^16.3.0",
 		"@wordpress/block-editor": "^15.6.0"
+	},
+	"stylelint": {
+		"customSyntax": "postcss-scss",
+		"plugins": [
+			"@stylistic/stylelint-plugin"
+		],
+		"rules": {
+			"@stylistic/indentation": 4
+		}
 	}
 }
