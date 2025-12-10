@@ -16,7 +16,7 @@
 		"start": "wp-scripts start --webpack-copy-php --output-path=build/admonition src/admonition/index.js"
 	},
 	"devDependencies": {
-		"@wordpress/scripts": "^30.26.0",
+		"@wordpress/scripts": "^30.27.0",
 		"jest-transform-stub": "^2.0.0"
 	},
 	"dependencies": {
