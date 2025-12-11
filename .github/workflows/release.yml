@@ -4,6 +4,13 @@ on:
   release:
     types: [published]
 
+# Grant the workflow permission to write repository contents so the
+# GITHUB_TOKEN can upload release assets. Without this the token may be
+# read-only and produce "Resource not accessible by integration" errors.
+permissions:
+  contents: write
+
+
 jobs:
   build-and-upload:
     runs-on: ubuntu-latest
