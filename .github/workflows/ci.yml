@@ -7,7 +7,7 @@ on:
     branches: [ main ]
 
 jobs:
-  build-test-package:
+  build-test:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -42,6 +42,43 @@ jobs:
 
       - name: Lint CSS
         run: npm run lint:css
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: build
+          path: build/**
+
+  package:
+    needs: build-test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Cache node modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.npm
+            node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: build
+          path: build
 
       - name: Package plugin (zip)
         run: npm run plugin-zip
