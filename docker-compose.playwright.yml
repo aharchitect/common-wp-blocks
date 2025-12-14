@@ -1,0 +1,65 @@
+services:
+  db:
+    image: mysql:5.7
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: wordpress
+      MYSQL_USER: wordpress
+      MYSQL_PASSWORD: wordpress
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  wordpress:
+    # Use WordPress 6.7 with PHP 8.2 to meet plugin minimum requirements
+    image: wordpress:6.9-php8.2-apache
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      WORDPRESS_DB_HOST: db:3306
+      WORDPRESS_DB_USER: wordpress
+      WORDPRESS_DB_PASSWORD: wordpress
+      WORDPRESS_DB_NAME: wordpress
+    ports:
+      - "8000:80"
+    volumes:
+      - ./:/var/www/html/wp-content/plugins/common-wp-blocks
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  cli:
+    # Use the official wordpress CLI image which is published as `wordpress:cli`.
+    # Some specific distro/version tags may not exist in registries; `wordpress:cli` is reliable.
+    image: wordpress:cli
+    depends_on:
+      - wordpress
+    volumes:
+      - ./:/var/www/html/wp-content/plugins/common-wp-blocks
+    entrypoint: >
+      sh -c "until curl -sS http://wordpress:80 | grep -q 'WordPress' || true; do sleep 2; done; \
+      wp core install --url=http://wordpress --title=wp --admin_user=admin --admin_password=pass --admin_email=admin@example.com --skip-email --path=/var/www/html || true; \
+      wp plugin activate common-wp-blocks --path=/var/www/html || true; sleep infinity"
+
+  playwright:
+    # Use the Playwright Docker image that matches the upgraded @playwright/test version.
+    # Use the tag without a distro suffix; some tags omit the '-focal' suffix.
+    image: mcr.microsoft.com/playwright:v1.57.0
+    depends_on:
+      - wordpress
+    working_dir: /workspace
+    volumes:
+      - ./:/workspace
+    environment:
+      WP_BASE_URL: http://wordpress
+    entrypoint: ["tail", "-f", "/dev/null"]
+
+volumes:
+  db_data:
