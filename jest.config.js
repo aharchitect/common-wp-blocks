@@ -40,5 +40,5 @@ module.exports = {
 	// setupFilesAfterEnv: [], // Keep this array empty or remove the property entirely.
 	// 5. Ignore E2E tests from unit test runs
 	// Prevent Jest from accidentally picking up Playwright E2E specs located in `tests/e2e/`.
-	testPathIgnorePatterns: ["<rootDir>/tests/e2e/"],
+	testPathIgnorePatterns: [ '<rootDir>/tests/e2e/' ],
 };

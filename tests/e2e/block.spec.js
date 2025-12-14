@@ -1,15 +1,15 @@
-const { test, expect } = require('@playwright/test');
+const { test, expect } = require( '@playwright/test' );
 
 // Basic smoke test: ensure WP admin is reachable and login works
-test('admin login and dashboard loads', async ({ page, baseURL }) => {
-  const loginUrl = `${baseURL}/wp-login.php`;
-  await page.goto(loginUrl);
+test( 'admin login and dashboard loads', async ( { page, baseURL } ) => {
+	const loginUrl = `${ baseURL }/wp-login.php`;
+	await page.goto( loginUrl );
 
-  await page.fill('#user_login', 'admin');
-  await page.fill('#user_pass', 'pass');
-  await page.click('#wp-submit');
+	await page.fill( '#user_login', 'admin' );
+	await page.fill( '#user_pass', 'pass' );
+	await page.click( '#wp-submit' );
 
-  // dashboard should load
-  await page.waitForSelector('#wpadminbar');
-  await expect(page).toHaveURL(/wp-admin/);
-});
+	// dashboard should load
+	await page.waitForSelector( '#wpadminbar' );
+	await expect( page ).toHaveURL( /wp-admin/ );
+} );

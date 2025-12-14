@@ -4,25 +4,25 @@
 	"name": "common-wp-blocks/admonition",
 	"version": "0.1.0",
 	"title": "Admonition (Note, Tip, Warning)",
-    "category": "design",
-    "icon": "lightbulb",
-    "description": "A visually distinct, collapsible block for notes, tips, and warnings.",
-    "example": {
-        "attributes": {
-            "type": "note",
-            "title": "A Friendly Note",
-            "isCollapsible": true,
-            "isInitiallyExpanded": false
-        },
-        "innerBlocks": [
-            {
-                "name": "core/paragraph",
-                "attributes": {
-                    "content": "Use this block to highlight important information for your readers."
-                }
-            }
-        ]
-    },
+	"category": "design",
+	"icon": "lightbulb",
+	"description": "A visually distinct, collapsible block for notes, tips, and warnings.",
+	"example": {
+		"attributes": {
+			"type": "note",
+			"title": "A Friendly Note",
+			"isCollapsible": true,
+			"isInitiallyExpanded": false
+		},
+		"innerBlocks": [
+			{
+				"name": "core/paragraph",
+				"attributes": {
+					"content": "Use this block to highlight important information for your readers."
+				}
+			}
+		]
+	},
 	"supports": {
 		"html": false,
 		"color": {
@@ -36,36 +36,36 @@
 				"width": false
 			}
 		},
-        "typography": {
-            "fontSize": true
-        }
+		"typography": {
+			"fontSize": true
+		}
 	},
-    "attributes": {
-        "type": {
-            "type": "string",
-            "default": "note"
-        },
-        "title": {
-            "type": "string",
-            "source": "html",
-            "selector": "summary",
-            "default": "Note"
-        },
-        "customIconData": {
-            "type": "string",
-            "default": ""
-        },
-        "isCollapsible": {
-            "type": "boolean",
-            "default": true
-        },
-        "isInitiallyExpanded": {
-            "type": "boolean",
-            "default": true
-        }
-    },
-    "textdomain": "common-wp-blocks",
-    "editorScript": "file:./index.js",
-    "editorStyle": "file:./index.css",
-    "style": "file:./style-index.css"
+	"attributes": {
+		"type": {
+			"type": "string",
+			"default": "note"
+		},
+		"title": {
+			"type": "string",
+			"source": "html",
+			"selector": "summary",
+			"default": "Note"
+		},
+		"customIconData": {
+			"type": "string",
+			"default": ""
+		},
+		"isCollapsible": {
+			"type": "boolean",
+			"default": true
+		},
+		"isInitiallyExpanded": {
+			"type": "boolean",
+			"default": true
+		}
+	},
+	"textdomain": "common-wp-blocks",
+	"editorScript": "file:./index.js",
+	"editorStyle": "file:./index.css",
+	"style": "file:./style-index.css"
 }
