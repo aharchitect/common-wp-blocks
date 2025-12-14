@@ -13,11 +13,18 @@
 		"lint:js": "wp-scripts lint-js",
 		"packages-update": "wp-scripts packages-update",
 		"plugin-zip": "wp-scripts plugin-zip && mkdir -p dist && mv *.zip dist/ || true",
+		"e2e:install": "npx playwright install --with-deps",
+		"test:e2e": "npx playwright test --config=tests/e2e/playwright.config.js",
+		"e2e:up": "docker-compose -f docker-compose.playwright.yml up -d",
+		"e2e:down": "docker-compose -f docker-compose.playwright.yml down",
 		"start": "wp-scripts start --webpack-copy-php --output-path=build/admonition src/admonition/index.js"
 	},
 	"devDependencies": {
+		"@playwright/test": "^1.57.0",
+		"@wordpress/e2e-test-utils-playwright": "^1.36.0",
 		"@wordpress/scripts": "^30.27.0",
 		"jest-transform-stub": "^2.0.0",
+		"playwright": "^1.57.0",
 		"postcss-scss": "^4.0.9"
 	},
 	"dependencies": {

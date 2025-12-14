@@ -1,41 +1,40 @@
 name: Release
 
 on:
-  release:
-    types: [published]
+    release:
+        types: [published]
 
 # Grant the workflow permission to write repository contents so the
 # GITHUB_TOKEN can upload release assets. Without this the token may be
 # read-only and produce "Resource not accessible by integration" errors.
 permissions:
-  contents: write
-
+    contents: write
 
 jobs:
-  build-and-upload:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+    build-and-upload:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
 
-      - name: Use Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
+            - name: Use Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: '18'
 
-      - name: Install dependencies
-        run: npm ci
+            - name: Install dependencies
+              run: npm ci
 
-      - name: Build
-        run: npm run build
+            - name: Build
+              run: npm run build
 
-      - name: Package plugin (zip)
-        run: npm run plugin-zip
+            - name: Package plugin (zip)
+              run: npm run plugin-zip
 
-      - name: Create/Update Release & Upload Assets
-        uses: softprops/action-gh-release@v2
-        with:
-          # Upload the packaged plugin zip located in `dist/`.
-          files: |
-            dist/common-wp-blocks.zip
-          # token: ${{ secrets.RELEASE_TOKEN }} # Optional: provide a PAT here if GITHUB_TOKEN lacks permissions
+            - name: Create/Update Release & Upload Assets
+              uses: softprops/action-gh-release@v2
+              with:
+                  # Upload the packaged plugin zip located in `dist/`.
+                  files: |
+                      dist/common-wp-blocks.zip
+                  # token: ${{ secrets.RELEASE_TOKEN }} # Optional: provide a PAT here if GITHUB_TOKEN lacks permissions
