@@ -15,7 +15,7 @@ services:
             retries: 5
 
     wordpress:
-        # Use WordPress 6.7 with PHP 8.2 to meet plugin minimum requirements
+        # Use WordPress 6.9 with PHP 8.2 to meet plugin minimum requirements
         image: wordpress:6.9-php8.2-apache
         depends_on:
             db:
@@ -58,7 +58,7 @@ services:
         volumes:
             - ./:/workspace
         environment:
-            WP_BASE_URL: http://wordpress
+            - WP_BASE_URL=http://wordpress:80
         entrypoint: ['tail', '-f', '/dev/null']
 
 volumes:
