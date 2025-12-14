@@ -51,3 +51,16 @@ Expanding tests
 
 CI artifacts
 - Playwright logs and `tests/e2e/test-results` are uploaded as workflow artifacts on each run (success or failure).
+
+Making E2E Required on `main`
+ - **Why:** Requiring the full E2E workflow for the protected `main` branch ensures merged code passes the integration tests while keeping PRs fast (the E2E workflow runs separately).
+ - **How (GitHub UI):**
+	 1. Go to the repository on GitHub → `Settings` → `Branches` → `Branch protection rules`.
+	 2. Edit or add a rule for the `main` branch.
+	 3. Under "Require status checks to pass before merging", enable it and select the `E2E Playwright` workflow from the list of available checks. Save the rule.
+ - **How (notes):**
+	 - The workflow name you should pick is `E2E Playwright` (the workflow's `name:` field).
+	 - You can also enable "Require pull request reviews before merging" in the same rule to block merges until PR reviews are done.
+	 - If you want occasional manual re-runs of E2E for debugging, use the Actions tab and run the `E2E Playwright` workflow via the "Run workflow" button (we added `workflow_dispatch` to support manual runs).
+
+If you'd like, I can also create a short checklist or a GitHub Action that comments on PRs with the E2E run link or automatically re-runs the E2E workflow on demand.
