@@ -16,9 +16,24 @@ test( 'create and render admonition block', async ( { page, baseURL } ) => {
 	await page.fill( '#user_pass', 'pass' );
 	await page.click( '#wp-submit' );
 
+
 	// Wait until admin bar is visible so we know login completed
 	await page.waitForSelector( '#wpadminbar', { timeout: 20000 } );
-	logger.info( 'Login successful, opening new post editor...' );
+	logger.info( 'Login successful, verifying session...' );
+
+	// Extra: log cookies after login
+	const cookies = await page.context().cookies();
+	logger.info({ cookies }, 'Cookies after login');
+
+	// Extra: verify we are not still on the login page
+	const currentUrl = page.url();
+	logger.info({ currentUrl }, 'URL after login');
+	if (currentUrl.includes('wp-login.php')) {
+		logger.error('Still on login page after login attempt!');
+		throw new Error('Login failed: still on login page after login attempt.');
+	}
+
+	logger.info( 'Opening new post editor...' );
 
 	// Try opening the new post editor directly; if it doesn't load, fallback to Posts->Add New
 	await page.goto( `${ resolvedBase }/wp-admin/post-new.php` );
