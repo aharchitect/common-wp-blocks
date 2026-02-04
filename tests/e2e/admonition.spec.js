@@ -29,25 +29,38 @@ test( 'create and render admonition block', async ( { page, baseURL } ) => {
 			'.editor-post-title__input, textarea.editor-post-title__input, .edit-post-visual-editor__block-list, .block-editor-writing-flow',
 			{ timeout: 45000 }
 		);
-		logger.info( 'Editor loaded!' );
-	} catch ( e ) {
-		// Print debug info before failing or retrying
+		logger.info('Editor loaded!');
+	} catch (e) {
+		// Enhanced error handling: log URL, HTML, screenshot, and browser console errors
 		try {
-			logger.error(
-				{ url: page.url() },
-				'Editor did not load. Current URL'
-			);
+			logger.error({ url: page.url() }, 'Editor did not load. Current URL');
 			const content = await page.content();
-			logger.error(
-				{ snippet: content.slice( 0, 20000 ) },
-				'Page content snippet'
-			);
-		} catch ( err ) {
-			logger.error( 'Could not get page content' );
+			logger.error({ snippet: content.slice(0, 20000) }, 'Page content snippet');
+			// Save full HTML to logs/editor-error.html
+			const fs = require('fs');
+			const path = require('path');
+			const logsDir = path.resolve(__dirname, '../../logs');
+			if (!fs.existsSync(logsDir)) fs.mkdirSync(logsDir);
+			fs.writeFileSync(path.join(logsDir, 'editor-error.html'), content);
+			// Capture screenshot
+			await page.screenshot({ path: path.join(logsDir, 'editor-error.png'), fullPage: true });
+			logger.error('Saved editor-error.html and editor-error.png to logs directory.');
+			// Capture browser console errors
+			const consoleErrors = [];
+			page.on('console', msg => {
+				if (msg.type() === 'error') {
+					consoleErrors.push(msg.text());
+				}
+			});
+			// Give a short delay to collect any pending console errors
+			await page.waitForTimeout(1000);
+			if (consoleErrors.length > 0) {
+				logger.error({ consoleErrors }, 'Browser console errors during editor load');
+			}
+		} catch (err) {
+			logger.error('Could not get page content or save diagnostics');
 		}
-		throw new Error(
-			'Editor did not load in time. See above for page content.'
-		);
+		throw new Error('Editor did not load in time. See above for page content.');
 	}
 
 	// Ensure the writing flow area or title is focused so keypresses go to editor
