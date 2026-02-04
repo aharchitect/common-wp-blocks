@@ -34,6 +34,15 @@ test( 'create and render admonition block', async ( { page, baseURL } ) => {
 		);
 	}
 
+	// Dismiss welcome modal if present
+	const welcomeCloseBtn = page.locator(
+		'button[aria-label="Close"], button[aria-label="Welcome to the editor"]'
+	);
+	if ( await welcomeCloseBtn.count() ) {
+		await welcomeCloseBtn.click();
+		logger.info( 'Dismissed Welcome to the editor dialog' );
+	}
+
 	logger.info( 'Opening new post editor...' );
 
 	// Try opening the new post editor directly; if it doesn't load, fallback to Posts->Add New
