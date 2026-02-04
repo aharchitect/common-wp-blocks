@@ -78,7 +78,8 @@ jobs:
             - name: Copy logs from Playwright container
               if: always()
               run: |
-                  docker cp $(docker compose -f $COMPOSE_FILE ps -q playwright):/workspace/logs ./logs || true
+                  PLAYWRIGHT_CONTAINER=$(docker compose -f $COMPOSE_FILE ps -q playwright)
+                  docker cp $PLAYWRIGHT_CONTAINER:/workspace/logs/. ./logs || true
 
             - name: Upload Playwright artifacts
               if: always()
