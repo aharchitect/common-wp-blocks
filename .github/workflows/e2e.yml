@@ -82,11 +82,6 @@ jobs:
                   docker exec $PLAYWRIGHT_CONTAINER sh -c "chmod -R 777 /workspace/logs"
                   docker cp $PLAYWRIGHT_CONTAINER:/workspace/logs/. ./logs || true
 
-            - name: Fix permissions on logs
-              if: always()
-              run: |
-                  chmod -R u+rw ./logs || true
-
             - name: Upload Playwright artifacts
               if: always()
               uses: actions/upload-artifact@v4
