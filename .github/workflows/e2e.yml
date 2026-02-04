@@ -75,6 +75,11 @@ jobs:
                   docker compose -f $COMPOSE_FILE exec playwright sh -c "npm ci && npx playwright test --config=tests/e2e/playwright.config.js --output=tests/e2e/test-results" | tee playwright.log
               continue-on-error: true
 
+            - name: Copy logs from Playwright container
+              if: always()
+              run: |
+                  docker cp $(docker compose -f $COMPOSE_FILE ps -q playwright):/workspace/logs ./logs || true
+
             - name: Upload Playwright artifacts
               if: always()
               uses: actions/upload-artifact@v4

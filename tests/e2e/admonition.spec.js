@@ -46,7 +46,9 @@ test( 'create and render admonition block', async ( { page, baseURL } ) => {
 			const fs = require( 'fs' );
 			const path = require( 'path' );
 			const logsDir = path.resolve( __dirname, '../../logs' );
-			if ( ! fs.existsSync( logsDir ) ) fs.mkdirSync( logsDir );
+			if ( ! fs.existsSync( logsDir ) ) {
+				fs.mkdirSync( logsDir );
+			}
 			fs.writeFileSync(
 				path.join( logsDir, 'editor-error.html' ),
 				content
