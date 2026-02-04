@@ -75,16 +75,11 @@ jobs:
                   docker compose -f $COMPOSE_FILE exec playwright sh -c "npm ci && npx playwright test --config=tests/e2e/playwright.config.js --output=tests/e2e/test-results" | tee playwright.log
               continue-on-error: true
 
-            - name: Prepare logs directory
-              if: always()
-              run: |
-                  rm -rf ./logs/*
-                  chmod -R u+rw ./logs || true
-
             - name: Copy logs from Playwright container
               if: always()
               run: |
                   PLAYWRIGHT_CONTAINER=$(docker compose -f $COMPOSE_FILE ps -q playwright)
+                  docker exec $PLAYWRIGHT_CONTAINER sh -c "chmod -R 777 /workspace/logs"
                   docker cp $PLAYWRIGHT_CONTAINER:/workspace/logs/. ./logs || true
 
             - name: Fix permissions on logs

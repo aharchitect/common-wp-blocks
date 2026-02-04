@@ -35,7 +35,7 @@ test( 'create and render admonition block', async ( { page, baseURL } ) => {
 	}
 
 	// Dismiss welcome modal if present
-	const welcomeCloseBtn = page.locator(
+	let welcomeCloseBtn = page.locator(
 		'button[aria-label="Close"], button[aria-label="Welcome to the editor"]'
 	);
 	if ( await welcomeCloseBtn.count() ) {
@@ -47,6 +47,14 @@ test( 'create and render admonition block', async ( { page, baseURL } ) => {
 
 	// Try opening the new post editor directly; if it doesn't load, fallback to Posts->Add New
 	await page.goto( `${ resolvedBase }/wp-admin/post-new.php` );
+	// After navigating to /wp-admin/post-new.php
+	welcomeCloseBtn = page.locator(
+		'button[aria-label="Close"], button[aria-label="Welcome to the editor"]'
+	);
+	if ( await welcomeCloseBtn.count() ) {
+		await welcomeCloseBtn.click();
+		logger.info( 'Dismissed Welcome to the editor dialog' );
+	}
 	logger.info( 'Waiting for editor to load...' );
 
 	try {
