@@ -1,94 +1,94 @@
 name: E2E Playwright
 
 on:
-  workflow_dispatch: {}
-  pull_request:
-  push:
-    branches:
-      - main
-      - master
+    workflow_dispatch: {}
+    pull_request:
+    push:
+        branches:
+            - main
+            - master
 
 jobs:
-  e2e:
-    runs-on: ubuntu-latest
-    env:
-      COMPOSE_FILE: docker-compose.playwright.yml
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+    e2e:
+        runs-on: ubuntu-latest
+        env:
+            COMPOSE_FILE: docker-compose.playwright.yml
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
+            - name: Set up Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: '18'
 
-      - name: Cache node modules
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.npm
-            node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
+            - name: Cache node modules
+              uses: actions/cache@v4
+              with:
+                  path: |
+                      ~/.npm
+                      node_modules
+                  key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+                  restore-keys: |
+                      ${{ runner.os }}-node-
 
-      - name: Install dependencies
-        run: npm ci
+            - name: Install dependencies
+              run: npm ci
 
-      - name: Build plugin
-        run: npm run build
+            - name: Build plugin
+              run: npm run build
 
-      - name: Pull docker images
-        run: docker compose -f $COMPOSE_FILE pull
+            - name: Pull docker images
+              run: docker compose -f $COMPOSE_FILE pull
 
-      - name: Start DB and WordPress
-        run: |
-          docker compose -f $COMPOSE_FILE up -d db wordpress
+            - name: Start DB and WordPress
+              run: |
+                  docker compose -f $COMPOSE_FILE up -d db wordpress
 
-      - name: Wait for WordPress (host)
-        run: |
-          for i in {1..60}; do
-            if curl -fsS http://localhost:8000/wp-login.php >/dev/null 2>&1; then
-              echo "WordPress is reachable"; break
-            fi
-            echo "waiting for wordpress... ($i)"; sleep 2
-          done
+            - name: Wait for WordPress (host)
+              run: |
+                  for i in {1..60}; do
+                    if curl -fsS http://localhost:8000/wp-login.php >/dev/null 2>&1; then
+                      echo "WordPress is reachable"; break
+                    fi
+                    echo "waiting for wordpress... ($i)"; sleep 2
+                  done
 
-      - name: Install WordPress and activate plugin (via wp-cli volumes-from)
-        run: |
-          WORDPRESS_CONTAINER=$(docker compose -f $COMPOSE_FILE ps -q wordpress)
-          echo "wordpress container: $WORDPRESS_CONTAINER"
-          docker run --rm --volumes-from "$WORDPRESS_CONTAINER" --network $(docker network ls --filter name=$(basename "$(pwd)")_default -q) \
-            -e WORDPRESS_DB_HOST='db:3306' -e WORDPRESS_DB_USER='wordpress' -e WORDPRESS_DB_PASSWORD='wordpress' -e WORDPRESS_DB_NAME='wordpress' \
-            wordpress:cli wp core install --url=http://wordpress --title=wp --admin_user=admin --admin_password=pass --admin_email=admin@example.com --skip-email --path=/var/www/html || true
-          docker run --rm --volumes-from "$WORDPRESS_CONTAINER" --network $(docker network ls --filter name=$(basename "$(pwd)")_default -q) \
-            -e WORDPRESS_DB_HOST='db:3306' -e WORDPRESS_DB_USER='wordpress' -e WORDPRESS_DB_PASSWORD='wordpress' -e WORDPRESS_DB_NAME='wordpress' \
-            wordpress:cli wp plugin activate common-wp-blocks --path=/var/www/html || true
+            - name: Install WordPress and activate plugin (via wp-cli volumes-from)
+              run: |
+                  WORDPRESS_CONTAINER=$(docker compose -f $COMPOSE_FILE ps -q wordpress)
+                  echo "wordpress container: $WORDPRESS_CONTAINER"
+                  docker run --rm --volumes-from "$WORDPRESS_CONTAINER" --network $(docker network ls --filter name=$(basename "$(pwd)")_default -q) \
+                    -e WORDPRESS_DB_HOST='db:3306' -e WORDPRESS_DB_USER='wordpress' -e WORDPRESS_DB_PASSWORD='wordpress' -e WORDPRESS_DB_NAME='wordpress' \
+                    wordpress:cli wp core install --url=http://wordpress --title=wp --admin_user=admin --admin_password=pass --admin_email=admin@example.com --skip-email --path=/var/www/html || true
+                  docker run --rm --volumes-from "$WORDPRESS_CONTAINER" --network $(docker network ls --filter name=$(basename "$(pwd)")_default -q) \
+                    -e WORDPRESS_DB_HOST='db:3306' -e WORDPRESS_DB_USER='wordpress' -e WORDPRESS_DB_PASSWORD='wordpress' -e WORDPRESS_DB_NAME='wordpress' \
+                    wordpress:cli wp plugin activate common-wp-blocks --path=/var/www/html || true
 
-      - name: Start Playwright container
-        run: docker compose -f $COMPOSE_FILE up -d playwright
+            - name: Start Playwright container
+              run: docker compose -f $COMPOSE_FILE up -d playwright
 
-      - name: Run Playwright tests
-        id: run_tests
-        run: |
-          set -o pipefail
-          docker compose -f $COMPOSE_FILE exec playwright sh -c "npm ci && npx playwright test --config=tests/e2e/playwright.config.js --output=tests/e2e/test-results" | tee playwright.log
-        continue-on-error: true
+            - name: Run Playwright tests
+              id: run_tests
+              run: |
+                  set -o pipefail
+                  docker compose -f $COMPOSE_FILE exec playwright sh -c "npm ci && npx playwright test --config=tests/e2e/playwright.config.js --output=tests/e2e/test-results" | tee playwright.log
+              continue-on-error: true
 
-      - name: Upload Playwright artifacts
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: playwright-artifacts
-          path: |
-            playwright.log
-            tests/e2e/test-results
-            tests/e2e/playwright-report
+            - name: Upload Playwright artifacts
+              if: always()
+              uses: actions/upload-artifact@v4
+              with:
+                  name: playwright-artifacts
+                  path: |
+                      playwright.log
+                      tests/e2e/test-results
+                      tests/e2e/playwright-report
 
-      - name: Tear down Compose
-        if: always()
-        run: docker compose -f $COMPOSE_FILE down -v
+            - name: Tear down Compose
+              if: always()
+              run: docker compose -f $COMPOSE_FILE down -v
 
-      - name: Fail if tests failed
-        if: steps.run_tests.outcome != 'success'
-        run: exit 1
+            - name: Fail if tests failed
+              if: steps.run_tests.outcome != 'success'
+              run: exit 1
