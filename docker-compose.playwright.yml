@@ -57,6 +57,7 @@ services:
         working_dir: /workspace
         volumes:
             - ./:/workspace
+            - ./logs:/workspace/logs
         environment:
             - WP_BASE_URL=http://wordpress:80
         entrypoint: ['tail', '-f', '/dev/null']

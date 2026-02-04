@@ -84,6 +84,7 @@ jobs:
                       playwright.log
                       tests/e2e/test-results
                       tests/e2e/playwright-report
+                      logs
 
             - name: Tear down Compose
               if: always()

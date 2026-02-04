@@ -1,4 +1,5 @@
 const { test, expect } = require( '@playwright/test' );
+const logger = require( './logger' );
 
 // E2E: Insert an admonition block, publish, and verify front-end rendering.
 test( 'create and render admonition block', async ( { page, baseURL } ) => {
@@ -6,10 +7,10 @@ test( 'create and render admonition block', async ( { page, baseURL } ) => {
 	// Resolve base URL: prefer Playwright fixture, then env, then localhost
 	const resolvedBase =
 		baseURL || process.env.WP_BASE_URL || 'http://localhost:8000';
-	// ...existing code...
+	logger.info( { baseURL }, 'Playwright baseURL' );
+	logger.info( { resolvedBase }, 'Resolved base URL' );
 
-	// Login
-	// ...existing code...
+	logger.info( 'Navigating to login page...' );
 	await page.goto( `${ resolvedBase }/wp-login.php` );
 	await page.fill( '#user_login', 'admin' );
 	await page.fill( '#user_pass', 'pass' );
@@ -17,22 +18,33 @@ test( 'create and render admonition block', async ( { page, baseURL } ) => {
 
 	// Wait until admin bar is visible so we know login completed
 	await page.waitForSelector( '#wpadminbar', { timeout: 20000 } );
-	// ...existing code...
+	logger.info( 'Login successful, opening new post editor...' );
 
 	// Try opening the new post editor directly; if it doesn't load, fallback to Posts->Add New
 	await page.goto( `${ resolvedBase }/wp-admin/post-new.php` );
-	// ...existing code...
+	logger.info( 'Waiting for editor to load...' );
 
 	try {
 		await page.waitForSelector(
 			'.editor-post-title__input, textarea.editor-post-title__input, .edit-post-visual-editor__block-list, .block-editor-writing-flow',
 			{ timeout: 45000 }
 		);
-		// ...existing code...
+		logger.info( 'Editor loaded!' );
 	} catch ( e ) {
 		// Print debug info before failing or retrying
-		// Removed unused variables url and content
-		// ...existing code...
+		try {
+			logger.error(
+				{ url: page.url() },
+				'Editor did not load. Current URL'
+			);
+			const content = await page.content();
+			logger.error(
+				{ snippet: content.slice( 0, 20000 ) },
+				'Page content snippet'
+			);
+		} catch ( err ) {
+			logger.error( 'Could not get page content' );
+		}
 		throw new Error(
 			'Editor did not load in time. See above for page content.'
 		);
