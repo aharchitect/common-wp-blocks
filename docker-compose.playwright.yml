@@ -30,7 +30,7 @@ services:
         volumes:
             - ./:/var/www/html/wp-content/plugins/common-wp-blocks
         healthcheck:
-            test: ['CMD-SHELL', 'curl -f http://localhost || exit 1']
+            test: ['CMD-SHELL', 'curl -f http://localhost:8000 || exit 1']
             interval: 10s
             timeout: 5s
             retries: 10
@@ -44,8 +44,8 @@ services:
         volumes:
             - ./:/var/www/html/wp-content/plugins/common-wp-blocks
         entrypoint: >
-            sh -c "until curl -sS http://wordpress:80 | grep -q 'WordPress' || true; do sleep 2; done; \
-            wp core install --url=http://wordpress --title=wp --admin_user=admin --admin_password=pass --admin_email=admin@example.com --skip-email --path=/var/www/html || true; \
+            sh -c "until curl -sS http://localhost:8000/ | grep -q 'WordPress' || true; do sleep 2; done; \
+            wp core install --url=http://localhost:8000 --title=wp --admin_user=admin --admin_password=pass --admin_email=admin@example.com --skip-email --path=/var/www/html || true; \
             wp plugin activate common-wp-blocks --path=/var/www/html || true; sleep infinity"
 
     playwright:
@@ -59,7 +59,7 @@ services:
             - ./:/workspace
             - ./logs:/workspace/logs
         environment:
-            - WP_BASE_URL=http://wordpress:80
+            - WP_BASE_URL=http://localhost:8000/
         entrypoint: ['tail', '-f', '/dev/null']
 
 volumes:

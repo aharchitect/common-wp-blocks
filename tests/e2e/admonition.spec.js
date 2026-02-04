@@ -34,34 +34,66 @@ test( 'create and render admonition block', async ( { page, baseURL } ) => {
 		);
 	}
 
-	// Dismiss welcome modal if present
-	let welcomeCloseBtn = page.locator(
-		'button[aria-label="Close"], button[aria-label="Welcome to the editor"]'
-	);
-	if ( await welcomeCloseBtn.count() ) {
-		await welcomeCloseBtn.click();
-		logger.info( 'Dismissed Welcome to the editor dialog' );
+	// Dismiss Welcome Guide (multi-step) and close button if present
+	while (true) {
+		// Try to find the Close button (X)
+		const closeBtn = page.locator('button[aria-label="Close"]');
+		if (await closeBtn.count()) {
+			await closeBtn.click();
+			logger.info('Dismissed Welcome to the editor dialog (Close button)');
+			break;
+		}
+		// Try to find the Next button in the guide
+		const nextBtn = page.locator('button.components-guide__forward-button');
+		if (await nextBtn.count()) {
+			await nextBtn.click();
+			logger.info('Clicked Next in Welcome to the editor dialog');
+			await page.waitForTimeout(300);
+			continue;
+		}
+		// If neither button is found, exit the loop
+		break;
 	}
 
 	logger.info( 'Opening new post editor...' );
 
 	// Try opening the new post editor directly; if it doesn't load, fallback to Posts->Add New
 	await page.goto( `${ resolvedBase }/wp-admin/post-new.php` );
-	// After navigating to /wp-admin/post-new.php
-	welcomeCloseBtn = page.locator(
-		'button[aria-label="Close"], button[aria-label="Welcome to the editor"]'
-	);
-	if ( await welcomeCloseBtn.count() ) {
-		await welcomeCloseBtn.click();
-		logger.info( 'Dismissed Welcome to the editor dialog' );
+	// Dismiss Welcome Guide (multi-step) and close button if present after navigation
+	while (true) {
+		const closeBtn = page.locator('button[aria-label="Close"]');
+		if (await closeBtn.count()) {
+			await closeBtn.click();
+			logger.info('Dismissed Welcome to the editor dialog (Close button)');
+			break;
+		}
+		const nextBtn = page.locator('button.components-guide__forward-button');
+		if (await nextBtn.count()) {
+			await nextBtn.click();
+			logger.info('Clicked Next in Welcome to the editor dialog');
+			await page.waitForTimeout(300);
+			continue;
+		}
+		break;
 	}
 	logger.info( 'Waiting for editor to load...' );
 
 	try {
-		await page.waitForSelector(
-			'.editor-post-title__input, textarea.editor-post-title__input, .edit-post-visual-editor__block-list, .block-editor-writing-flow',
-			{ timeout: 45000 }
-		);
+		const titleLocator = page.locator('.block-editor-block-list__block.editor-post-title.editor-post-title__input.rich-text').first();
+		try {
+			await titleLocator.click({ timeout: 500 });
+			await titleLocator.type('E2E Note Title', { delay: 50 });
+			logger.info('Typed title using .type()');
+		} catch (e) {
+			logger.error('Could not click or type in the title field, trying keyboard typing');
+			// Fallback: try typing directly if already focused
+			await page.keyboard.type('E2E Note Title', { delay: 50 });
+		}
+
+		// await page.waitForSelector(
+		// 	'.editor-post-title__input, .block-editor-block-list__block.editor-post-title.editor-post-title__input.rich-text, .block-editor-writing-flow, .block-editor-block-list__layout',
+		// 	{ timeout: 45000 }
+		// );
 		logger.info( 'Editor loaded!' );
 	} catch ( e ) {
 		// Enhanced error handling: log URL, HTML, screenshot, and browser console errors
@@ -141,7 +173,9 @@ test( 'create and render admonition block', async ( { page, baseURL } ) => {
 	// Try slash inserter first, then fallback to block inserter + search
 	let inserted = false;
 	try {
-		await page.keyboard.type( '/admonition' );
+		await page.click({ timeout: 500 });
+		await page.type('/admonition', { delay: 50 });
+		logger.info('Typed title using .type()');
 		await page.keyboard.press( 'Enter' );
 		await page.waitForSelector( '.admonition-title', { timeout: 10000 } );
 		inserted = true;
@@ -188,9 +222,17 @@ test( 'create and render admonition block', async ( { page, baseURL } ) => {
 	}
 
 	// Set the admonition title
-	const titleLocator = page.locator( '.admonition-title' ).first();
-	await titleLocator.click();
-	await titleLocator.fill( 'E2E Note Title' );
+	const titleLocator = page.locator('.block-editor-block-list__block.editor-post-title.editor-post-title__input.rich-text').first();
+	logger.info('Attempting to focus and type in the post title field');
+	try {
+		await titleLocator.click({ timeout: 3000 });
+		await titleLocator.type('E2E Note Title', { delay: 50 });
+		logger.info('Typed title using .type()');
+	} catch (e) {
+		logger.error('Could not click or type in the title field, trying keyboard typing');
+		// Fallback: try typing directly if already focused
+		await page.keyboard.type('E2E Note Title', { delay: 50 });
+	}
 
 	// Focus the content area and type paragraph content
 	const contentArea = page

@@ -6,7 +6,7 @@
 	"license": "GPL-2.0-or-later",
 	"main": "build/index.js",
 	"scripts": {
-		"build": "wp-scripts build --webpack-copy-php --output-path=build/admonition src/admonition/index.js",
+		"build": "wp-scripts build --webpack-copy-php",
 		"format": "wp-scripts format",
 		"test": "wp-scripts test-unit-js",
 		"lint:css": "wp-scripts lint-style",

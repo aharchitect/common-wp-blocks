@@ -9,9 +9,10 @@
  * License:           GPL-2.0-or-later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain:       common-wp-blocks
- *
- * @package CreateBlock
- */
+*
+* @package CreateBlock
+*/
+register_block_type( __DIR__ . '/build/admonition' );
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit; // Exit if accessed directly.

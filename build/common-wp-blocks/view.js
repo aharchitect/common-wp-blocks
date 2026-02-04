@@ -1,1 +1,0 @@
-console.log("Hello World! (from create-block-common-wp-blocks block)");

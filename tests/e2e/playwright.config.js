@@ -8,6 +8,6 @@ module.exports = defineConfig( {
 	},
 	use: {
 		headless: true,
-		baseURL: process.env.WP_BASE_URL || 'http://wordpress:80',
+		baseURL: process.env.WP_BASE_URL || 'http://localhost:8000/',
 	},
 } );
