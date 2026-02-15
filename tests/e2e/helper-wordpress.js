@@ -8,7 +8,13 @@ async function loginToWordPress( page, resolvedBase, username, password ) {
 	await page.fill( '#user_login', username );
 	await page.fill( '#user_pass', password );
 	await page.click( '#wp-submit' );
-	await page.waitForSelector( '#wpadminbar', { timeout: 30000 } );
+	await page.waitForURL( /\/wp-admin(\/|$)/, { timeout: 60000 } );
+
+	// Different admin screens can render different chrome timing in CI.
+	await page.waitForSelector(
+		'#wpadminbar, body.wp-admin, #adminmenuwrap',
+		{ timeout: 60000 }
+	);
 }
 
 async function createPost( page, resolvedBase, titleText, contentText ) {
