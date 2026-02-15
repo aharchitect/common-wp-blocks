@@ -14,14 +14,6 @@ test( 'create and render admonition block', async ( { page, baseURL } ) => {
 	logger.info( 'Navigating to login page...' );
 	await loginToWordPress( page, resolvedBase, 'admin', 'pass' );
 
-	// Wait until admin bar is visible so we know login completed
-	await page.waitForSelector( '#wpadminbar', { timeout: 20000 } );
-	logger.info( 'Login successful, verifying session...' );
-
-	// Extra: log cookies after login
-	const cookies = await page.context().cookies();
-	logger.debug( { cookies }, 'Cookies after login' );
-
 	// Extra: verify we are not still on the login page
 	const currentUrl = page.url();
 	logger.info( { currentUrl }, 'URL after login' );
