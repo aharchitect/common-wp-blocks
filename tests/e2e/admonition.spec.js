@@ -1,6 +1,6 @@
 const { test, expect } = require( '@playwright/test' );
 const logger = require( './logger' );
-const { loginToWordPress, createPost } = require('./helper-wordpress');
+const { loginToWordPress, createPost } = require( './helper-wordpress' );
 
 // E2E: Insert an admonition block, publish, and verify front-end rendering.
 test( 'create and render admonition block', async ( { page, baseURL } ) => {
@@ -13,7 +13,7 @@ test( 'create and render admonition block', async ( { page, baseURL } ) => {
 
 	logger.info( 'Navigating to login page...' );
 	await loginToWordPress( page, resolvedBase, 'admin', 'pass' );
-	
+
 	// Wait until admin bar is visible so we know login completed
 	await page.waitForSelector( '#wpadminbar', { timeout: 20000 } );
 	logger.info( 'Login successful, verifying session...' );
@@ -33,20 +33,24 @@ test( 'create and render admonition block', async ( { page, baseURL } ) => {
 	}
 
 	// Dismiss Welcome Guide (multi-step) and close button if present
-	while (true) {
+	while ( true ) {
 		// Try to find the Close button (X)
-		const closeBtn = page.locator('button[aria-label="Close"]');
-		if (await closeBtn.count()) {
+		const closeBtn = page.locator( 'button[aria-label="Close"]' );
+		if ( await closeBtn.count() ) {
 			await closeBtn.click();
-			logger.info('Dismissed Welcome to the editor dialog (Close button)');
+			logger.info(
+				'Dismissed Welcome to the editor dialog (Close button)'
+			);
 			break;
 		}
 		// Try to find the Next button in the guide
-		const nextBtn = page.locator('button.components-guide__forward-button');
-		if (await nextBtn.count()) {
+		const nextBtn = page.locator(
+			'button.components-guide__forward-button'
+		);
+		if ( await nextBtn.count() ) {
 			await nextBtn.click();
-			logger.info('Clicked Next in Welcome to the editor dialog');
-			await page.waitForTimeout(300);
+			logger.info( 'Clicked Next in Welcome to the editor dialog' );
+			await page.waitForTimeout( 300 );
 			continue;
 		}
 		// If neither button is found, exit the loop
@@ -55,7 +59,12 @@ test( 'create and render admonition block', async ( { page, baseURL } ) => {
 
 	logger.info( 'Opening new post editor...' );
 	// Try opening the new post editor directly; if it doesn't load, fallback to Posts->Add New
-	await createPost( page, resolvedBase, 'End2End Test Post from Playwright', 'This is automated test content.' );
+	await createPost(
+		page,
+		resolvedBase,
+		'End2End Test Post from Playwright',
+		'This is automated test content.'
+	);
 
 	// Ensure the writing flow area or title is focused so keypresses go to editor
 	const writingFlow = page
@@ -81,9 +90,9 @@ test( 'create and render admonition block', async ( { page, baseURL } ) => {
 	// Try slash inserter first, then fallback to block inserter + search
 	let inserted = false;
 	try {
-		await page.click({ timeout: 500 });
-		await page.type('/admonition', { delay: 50 });
-		logger.info('Typed title using .type()');
+		await page.click( { timeout: 500 } );
+		await page.type( '/admonition', { delay: 50 } );
+		logger.info( 'Typed title using .type()' );
 		await page.keyboard.press( 'Enter' );
 		await page.waitForSelector( '.admonition-title', { timeout: 10000 } );
 		inserted = true;
