@@ -5,8 +5,32 @@ function normalizeBaseUrl( baseUrl ) {
 async function loginToWordPress( page, resolvedBase, username, password ) {
 	const baseUrl = normalizeBaseUrl( resolvedBase );
 	await page.goto( `${ baseUrl }/wp-login.php` );
-	await page.fill( '#user_login', username );
-	await page.fill( '#user_pass', password );
+	const userLogin = page.locator( '#user_login' );
+	const userPass = page.locator( '#user_pass' );
+
+	// CI can occasionally end up with wrong field contents due page timing/overlays.
+	// Ensure both credentials are actually in the right inputs before submit.
+	let credentialsApplied = false;
+	for ( let i = 0; i < 2; i++ ) {
+		await userLogin.fill( '' );
+		await userPass.fill( '' );
+		await userLogin.fill( username );
+		await userPass.fill( password );
+
+		const currentUser = await userLogin.inputValue();
+		const currentPass = await userPass.inputValue();
+		if ( currentUser === username && currentPass === password ) {
+			credentialsApplied = true;
+			break;
+		}
+	}
+
+	if ( ! credentialsApplied ) {
+		throw new Error(
+			'Could not reliably populate WordPress login credentials before submit.'
+		);
+	}
+
 	await page.click( '#wp-submit' );
 	await page.waitForURL( /\/wp-admin(\/|$)/, { timeout: 60000 } );
 
