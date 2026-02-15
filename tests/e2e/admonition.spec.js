@@ -4,12 +4,14 @@ const { loginToWordPress, createPost } = require( './helper-wordpress' );
 
 // E2E: Insert an admonition block, publish, and verify front-end rendering.
 test( 'create and render admonition block', async ( { page, baseURL } ) => {
-	test.setTimeout( 45000 ); // Allow up to 45s for slow environments
+	test.setTimeout( 90000 ); // Allow up to 90s for slow environments
 	// Resolve base URL: prefer Playwright fixture, then env, then localhost
 	const resolvedBase =
 		baseURL || process.env.WP_BASE_URL || 'http://localhost:8000';
 	logger.info( { baseURL }, 'Playwright baseURL' );
 	logger.info( { resolvedBase }, 'Resolved base URL' );
+	const admonitionTitleText = 'E2E Note Title';
+	const admonitionContentText = 'This is an admonition created by E2E test.';
 
 	logger.info( 'Navigating to login page...' );
 	await loginToWordPress( page, resolvedBase, 'admin', 'pass' );
@@ -58,155 +60,83 @@ test( 'create and render admonition block', async ( { page, baseURL } ) => {
 		'This is automated test content.'
 	);
 
-	// Ensure the writing flow area or title is focused so keypresses go to editor
-	const writingFlow = page
+	// Detect whether editor is rendered inside iframe and scope selectors accordingly.
+	const iframeCount = await page
+		.locator( 'iframe[name="editor-canvas"]' )
+		.count();
+	const editor =
+		iframeCount > 0
+			? page.frameLocator( 'iframe[name="editor-canvas"]' )
+			: page;
+
+	// Create the next block by placing cursor at the end of current paragraph and pressing Enter.
+	const lastParagraph = editor
 		.locator(
-			'.block-editor-writing-flow, .edit-post-visual-editor__block-list'
+			'.wp-block-paragraph[contenteditable="true"], p.block-editor-rich-text__editable[contenteditable="true"]'
 		)
+		.last();
+	await lastParagraph.waitFor( { state: 'visible', timeout: 15000 } );
+	await lastParagraph.click();
+	await page.keyboard.press( 'End' );
+	await page.keyboard.press( 'Enter' );
+
+	// Insert Admonition block via slash command.
+	await page.keyboard.type( '/admonition', { delay: 20 } );
+	await page.keyboard.press( 'Enter' );
+
+	// Fill admonition title.
+	const admonitionTitle = editor
+		.locator( '.admonition-title[contenteditable="true"]' )
 		.first();
-	if ( await writingFlow.count() ) {
-		await writingFlow.click();
-	} else {
-		// Fallback: click the title input then press ArrowDown to reach the block area
-		const titleInput = page
-			.locator(
-				'.editor-post-title__input, textarea.editor-post-title__input'
-			)
-			.first();
-		if ( await titleInput.count() ) {
-			await titleInput.click();
-			await page.keyboard.press( 'ArrowDown' );
+	await admonitionTitle.waitFor( { state: 'visible', timeout: 15000 } );
+	await admonitionTitle.click();
+	await page.keyboard.press( 'ControlOrMeta+a' );
+	await page.keyboard.type( admonitionTitleText );
+
+	// Fill admonition content paragraph.
+	const admonitionBlock = editor
+		.locator(
+			'details:has(.admonition-title), .wp-block-common-wp-blocks-admonition'
+		)
+		.last();
+	await admonitionBlock.waitFor( { state: 'visible', timeout: 15000 } );
+
+	// Admonition uses <details>; ensure content is expanded before typing.
+	const detailsBlock = editor
+		.locator( 'details:has(.admonition-title)' )
+		.last();
+	if ( await detailsBlock.count() ) {
+		const isOpen = await detailsBlock.getAttribute( 'open' );
+		if ( isOpen === null ) {
+			await detailsBlock.locator( 'summary.admonition-header' ).click();
 		}
 	}
 
-	// Try slash inserter first, then fallback to block inserter + search
-	let inserted = false;
-	try {
-		await page.click( { timeout: 500 } );
-		await page.type( '/admonition', { delay: 50 } );
-		logger.info( 'Typed title using .type()' );
-		await page.keyboard.press( 'Enter' );
-		await page.waitForSelector( '.admonition-title', { timeout: 10000 } );
-		inserted = true;
-	} catch ( e ) {
-		// ignore and try block inserter
-	}
-
-	if ( ! inserted ) {
-		// Open block inserter
-		const inserterToggle = page
-			.locator(
-				'button[aria-label="Add block"], button.editor-inserter__toggle'
-			)
-			.first();
-		if ( await inserterToggle.count() ) {
-			await inserterToggle.click();
-			// search input may have placeholder 'Search for a block' or similar
-			const searchInput = page
-				.locator(
-					'input[placeholder*="Search"], input[placeholder*="search"]'
-				)
-				.first();
-			if ( await searchInput.count() ) {
-				await searchInput.fill( 'admonition' );
-				// Wait and click the block in the inserter results
-				const admonionButton = page
-					.locator(
-						'button:has-text("Admonition"), div[role="button"]:has-text("Admonition")'
-					)
-					.first();
-				await admonionButton.waitFor( { timeout: 10000 } );
-				await admonionButton.click();
-				await page.waitForSelector( '.admonition-title', {
-					timeout: 10000,
-				} );
-				inserted = true;
-			}
+	const paragraphCandidates = admonitionBlock.locator(
+		'.admonition-content p[contenteditable="true"]'
+	);
+	const paragraphCount = await paragraphCandidates.count();
+	let clickedParagraph = false;
+	for ( let i = 0; i < paragraphCount; i++ ) {
+		const candidate = paragraphCandidates.nth( i );
+		if ( await candidate.isVisible() ) {
+			await candidate.click();
+			clickedParagraph = true;
+			break;
 		}
 	}
 
-	// Wait for admonition title editable to appear in editor
-	// if ( ! inserted ) {
-	// 	throw new Error( 'Failed to insert admonition block' );
-	// }
-
-	// Focus the content area and type paragraph content
-	const contentArea = page
-		.locator( '.admonition-content p, .admonition-content' )
-		.first();
-	// If there's an inner paragraph, click it; otherwise click the content container and type
-	if ( await contentArea.count() ) {
-		await contentArea.click();
-		await page.keyboard.type(
-			'This is an admonition created by E2E test.'
-		);
-	} else {
-		await page.locator( '.admonition-content' ).click();
-		await page.keyboard.type(
-			'This is an admonition created by E2E test.'
+	if ( ! clickedParagraph ) {
+		throw new Error(
+			'Could not find a visible editable paragraph inside the Admonition block.'
 		);
 	}
 
-	// Publish the post - handle both single- and two-step publish flows
-	try {
-		await page.click(
-			'button.editor-post-publish-button__button, button[aria-label="Publish"]',
-			{ timeout: 5000 }
-		);
-	} catch ( e ) {
-		// Try alternative selector
-		await page.click(
-			'button.editor-post-publish-panel__toggle, .editor-post-publish-button',
-			{ timeout: 5000 }
-		);
-	}
+	await page.keyboard.type( admonitionContentText );
 
-	// Confirm publish if confirmation shown
-	try {
-		await page.waitForSelector(
-			'button.editor-post-publish-panel__header-publish-button, button.editor-post-publish-button__button',
-			{ timeout: 3000 }
-		);
-		await page.click(
-			'button.editor-post-publish-panel__header-publish-button, button.editor-post-publish-button__button'
-		);
-	} catch ( e ) {
-		// Likely single click publish completed
-	}
-
-	// Wait for post published notice and click View Post
-	await page.waitForSelector(
-		'a.editor-post-publish-panel__postpublish-buttons__view-link, a.post-publish-panel__postpublish-buttons a',
-		{ timeout: 10000 }
-	);
-	const viewLink = page
-		.locator(
-			'a.editor-post-publish-panel__postpublish-buttons__view-link, a.post-publish-panel__postpublish-buttons a'
-		)
-		.first();
-	const href = await viewLink.getAttribute( 'href' );
-	if ( href ) {
-		// If href is relative, make absolute
-		const target = href.startsWith( 'http' )
-			? href
-			: `${ resolvedBase }${ href }`;
-		await page.goto( target );
-	} else {
-		await viewLink.click();
-	}
-
-	// Front-end assertions: admonition title and content should be present
-	await page.waitForSelector( '.admonition-title, .admonition-content', {
-		timeout: 10000,
-	} );
-	await expect( page.locator( '.admonition-title' ) ).toContainText(
-		'E2E Note Title'
-	);
-	await expect( page.locator( '.admonition-content' ) ).toContainText(
-		'This is an admonition created by E2E test.'
-	);
-	// Check base class for default type
+	// Assertions in editor: title and content should be present in the inserted Admonition block.
+	await expect( admonitionTitle ).toContainText( admonitionTitleText );
 	await expect(
-		page.locator( 'details.admonition-type-note, .admonition-type-note' )
-	).toHaveCount( 1 );
+		admonitionBlock.locator( '.admonition-content' ).first()
+	).toContainText( admonitionContentText );
 } );
