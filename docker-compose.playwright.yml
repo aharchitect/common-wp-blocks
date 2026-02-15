@@ -59,7 +59,7 @@ services:
             - ./:/workspace
             - ./logs:/workspace/logs
         environment:
-            - WP_BASE_URL=http://localhost:8000/
+            - WP_BASE_URL=http://wordpress
         entrypoint: ['tail', '-f', '/dev/null']
 
 volumes:
