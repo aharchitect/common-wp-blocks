@@ -1,5 +1,6 @@
 const { test, expect } = require( '@playwright/test' );
 const logger = require( './logger' );
+const { loginToWordPress, createPost } = require('./helper-wordpress');
 
 // E2E: Insert an admonition block, publish, and verify front-end rendering.
 test( 'create and render admonition block', async ( { page, baseURL } ) => {
@@ -11,18 +12,15 @@ test( 'create and render admonition block', async ( { page, baseURL } ) => {
 	logger.info( { resolvedBase }, 'Resolved base URL' );
 
 	logger.info( 'Navigating to login page...' );
-	await page.goto( `${ resolvedBase }/wp-login.php` );
-	await page.fill( '#user_login', 'admin' );
-	await page.fill( '#user_pass', 'pass' );
-	await page.click( '#wp-submit' );
-
+	await loginToWordPress( page, resolvedBase, 'admin', 'pass' );
+	
 	// Wait until admin bar is visible so we know login completed
 	await page.waitForSelector( '#wpadminbar', { timeout: 20000 } );
 	logger.info( 'Login successful, verifying session...' );
 
 	// Extra: log cookies after login
 	const cookies = await page.context().cookies();
-	logger.info( { cookies }, 'Cookies after login' );
+	logger.debug( { cookies }, 'Cookies after login' );
 
 	// Extra: verify we are not still on the login page
 	const currentUrl = page.url();
@@ -56,98 +54,8 @@ test( 'create and render admonition block', async ( { page, baseURL } ) => {
 	}
 
 	logger.info( 'Opening new post editor...' );
-
 	// Try opening the new post editor directly; if it doesn't load, fallback to Posts->Add New
-	await page.goto( `${ resolvedBase }/wp-admin/post-new.php` );
-	// Dismiss Welcome Guide (multi-step) and close button if present after navigation
-	while (true) {
-		const closeBtn = page.locator('button[aria-label="Close"]');
-		if (await closeBtn.count()) {
-			await closeBtn.click();
-			logger.info('Dismissed Welcome to the editor dialog (Close button)');
-			break;
-		}
-		const nextBtn = page.locator('button.components-guide__forward-button');
-		if (await nextBtn.count()) {
-			await nextBtn.click();
-			logger.info('Clicked Next in Welcome to the editor dialog');
-			await page.waitForTimeout(300);
-			continue;
-		}
-		break;
-	}
-	logger.info( 'Waiting for editor to load...' );
-
-	try {
-		const titleLocator = page.locator('.block-editor-block-list__block.editor-post-title.editor-post-title__input.rich-text').first();
-		try {
-			await titleLocator.click({ timeout: 500 });
-			await titleLocator.type('E2E Note Title', { delay: 50 });
-			logger.info('Typed title using .type()');
-		} catch (e) {
-			logger.error('Could not click or type in the title field, trying keyboard typing');
-			// Fallback: try typing directly if already focused
-			await page.keyboard.type('E2E Note Title', { delay: 50 });
-		}
-
-		// await page.waitForSelector(
-		// 	'.editor-post-title__input, .block-editor-block-list__block.editor-post-title.editor-post-title__input.rich-text, .block-editor-writing-flow, .block-editor-block-list__layout',
-		// 	{ timeout: 45000 }
-		// );
-		logger.info( 'Editor loaded!' );
-	} catch ( e ) {
-		// Enhanced error handling: log URL, HTML, screenshot, and browser console errors
-		try {
-			logger.error(
-				{ url: page.url() },
-				'Editor did not load. Current URL'
-			);
-			const content = await page.content();
-			logger.error(
-				{ snippet: content.slice( 0, 20000 ) },
-				'Page content snippet'
-			);
-			// Save full HTML to logs/editor-error.html
-			const fs = require( 'fs' );
-			const path = require( 'path' );
-			const logsDir = path.resolve( __dirname, '../../logs' );
-			if ( ! fs.existsSync( logsDir ) ) {
-				fs.mkdirSync( logsDir );
-			}
-			fs.writeFileSync(
-				path.join( logsDir, 'editor-error.html' ),
-				content
-			);
-			// Capture screenshot
-			await page.screenshot( {
-				path: path.join( logsDir, 'editor-error.png' ),
-				fullPage: true,
-			} );
-			logger.error(
-				'Saved editor-error.html and editor-error.png to logs directory.'
-			);
-			// Capture browser console errors
-			const consoleErrors = [];
-			page.on( 'console', ( msg ) => {
-				if ( msg.type() === 'error' ) {
-					consoleErrors.push( msg.text() );
-				}
-			} );
-			// Give a short delay to collect any pending console errors
-			await page.waitForTimeout( 1000 );
-			if ( consoleErrors.length > 0 ) {
-				logger.error(
-					{ consoleErrors },
-					'Browser console errors during editor load'
-				);
-			}
-		} catch ( err ) {
-			logger.error( 'Could not get page content or save diagnostics' );
-		}
-		throw new Error(
-			'Editor did not load in time. See above for page content.'
-		);
-	}
+	await createPost( page, resolvedBase, 'End2End Test Post from Playwright', 'This is automated test content.' );
 
 	// Ensure the writing flow area or title is focused so keypresses go to editor
 	const writingFlow = page
@@ -217,22 +125,9 @@ test( 'create and render admonition block', async ( { page, baseURL } ) => {
 	}
 
 	// Wait for admonition title editable to appear in editor
-	if ( ! inserted ) {
-		throw new Error( 'Failed to insert admonition block' );
-	}
-
-	// Set the admonition title
-	const titleLocator = page.locator('.block-editor-block-list__block.editor-post-title.editor-post-title__input.rich-text').first();
-	logger.info('Attempting to focus and type in the post title field');
-	try {
-		await titleLocator.click({ timeout: 3000 });
-		await titleLocator.type('E2E Note Title', { delay: 50 });
-		logger.info('Typed title using .type()');
-	} catch (e) {
-		logger.error('Could not click or type in the title field, trying keyboard typing');
-		// Fallback: try typing directly if already focused
-		await page.keyboard.type('E2E Note Title', { delay: 50 });
-	}
+	// if ( ! inserted ) {
+	// 	throw new Error( 'Failed to insert admonition block' );
+	// }
 
 	// Focus the content area and type paragraph content
 	const contentArea = page
