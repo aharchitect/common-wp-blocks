@@ -33,3 +33,4 @@ node_modules/
 .env
 build/
 test-results/
+test-debug-no-title.*
