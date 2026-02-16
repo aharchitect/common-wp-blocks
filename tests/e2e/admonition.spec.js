@@ -434,7 +434,9 @@ test( 'admonition custom base64 icon is persisted and rendered via mask', async 
 	const frontendBlock = frontendPage
 		.locator( '.wp-block-common-wp-blocks-admonition' )
 		.first();
-	const frontendSummary = frontendBlock.locator( 'summary.admonition-header' );
+	const frontendSummary = frontendBlock.locator(
+		'summary.admonition-header'
+	);
 	await expect( frontendSummary ).toBeVisible( { timeout: 15000 } );
 
 	expect( await frontendSummary.getAttribute( 'data-has-custom-icon' ) ).toBe(
@@ -443,7 +445,9 @@ test( 'admonition custom base64 icon is persisted and rendered via mask', async 
 	expect(
 		await frontendSummary.getAttribute( 'data-has-default-icon' )
 	).toBeNull();
-	expect( await frontendSummary.getAttribute( 'data-default-icon' ) ).toBeNull();
+	expect(
+		await frontendSummary.getAttribute( 'data-default-icon' )
+	).toBeNull();
 
 	const blockStyle = ( await frontendBlock.getAttribute( 'style' ) ) || '';
 	expect( blockStyle ).toMatch( /--admonition-icon-mask:\s*url\(/ );
