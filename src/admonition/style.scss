@@ -79,8 +79,8 @@ $admonition-config: (
     }
 
     /* 2. Default Icon Logic: Use a Dashicon font for default types */
-    summary[data-default-icon]:not([data-default-icon=""])::before,
-    .admonition-header[data-default-icon]:not([data-default-icon=""])::before {
+    summary[data-has-default-icon="true"]::before,
+    .admonition-header[data-has-default-icon="true"]::before {
         content: "";
         width: 1.25em;
         height: 1.25em;

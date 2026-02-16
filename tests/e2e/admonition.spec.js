@@ -67,6 +67,13 @@ async function readBeforeMaskImage( locator ) {
 	} );
 }
 
+async function readAdmonitionTypeClass( summaryLocator ) {
+	return summaryLocator.evaluate( ( el ) => {
+		const block = el.closest( '.wp-block-common-wp-blocks-admonition' );
+		return block?.className || '';
+	} );
+}
+
 async function savePost( page ) {
 	const saveButtons = page.getByRole( 'button', {
 		name: /^(Update|Save|Save draft)$/i,
@@ -118,9 +125,9 @@ async function goToFrontendPost( page, resolvedBase, postId ) {
 async function ensureBlockInspectorVisible( page ) {
 	const settingsButton = page.getByRole( 'button', { name: /^Settings$/i } );
 	if ( await settingsButton.count() ) {
-		const expanded = await settingsButton.first().getAttribute(
-			'aria-expanded'
-		);
+		const expanded = await settingsButton
+			.first()
+			.getAttribute( 'aria-expanded' );
 		if ( expanded !== 'true' ) {
 			await settingsButton.first().click();
 		}
@@ -281,7 +288,9 @@ test( 'admonition default icon mask renders and changes when type changes', asyn
 	);
 
 	await savePost( page );
-	const postId = ( await getCurrentPostId( page ) ) || getPostIdFromEditorUrl( page.url() );
+	const postId =
+		( await getCurrentPostId( page ) ) ||
+		getPostIdFromEditorUrl( page.url() );
 	if ( ! postId ) {
 		throw new Error( 'Could not determine post ID from editor URL.' );
 	}
@@ -290,13 +299,21 @@ test( 'admonition default icon mask renders and changes when type changes', asyn
 	await goToFrontendPost( warningFrontendPage, resolvedBase, postId );
 	const frontendWarningSummary = warningFrontendPage
 		.locator(
-			'.wp-block-common-wp-blocks-admonition summary.admonition-header[data-default-icon]'
+			'.wp-block-common-wp-blocks-admonition summary.admonition-header'
 		)
 		.first();
 	await expect( frontendWarningSummary ).toBeVisible( { timeout: 15000 } );
+	const warningHasDefaultFlag =
+		( await frontendWarningSummary.getAttribute(
+			'data-has-default-icon'
+		) ) === 'true' ||
+		( await frontendWarningSummary.getAttribute( 'data-default-icon' ) ) !==
+			null;
+	expect( warningHasDefaultFlag ).toBe( true );
 
-	const warningDataDefaultIcon =
-		await frontendWarningSummary.getAttribute( 'data-default-icon' );
+	const warningTypeClass = await readAdmonitionTypeClass(
+		frontendWarningSummary
+	);
 	const frontendWarningMask = await readBeforeMaskImage(
 		frontendWarningSummary
 	);
@@ -325,13 +342,19 @@ test( 'admonition default icon mask renders and changes when type changes', asyn
 	await goToFrontendPost( infoFrontendPage, resolvedBase, postId );
 	const frontendInfoSummary = infoFrontendPage
 		.locator(
-			'.wp-block-common-wp-blocks-admonition summary.admonition-header[data-default-icon]'
+			'.wp-block-common-wp-blocks-admonition summary.admonition-header'
 		)
 		.first();
 	await expect( frontendInfoSummary ).toBeVisible( { timeout: 15000 } );
+	const infoHasDefaultFlag =
+		( await frontendInfoSummary.getAttribute(
+			'data-has-default-icon'
+		) ) === 'true' ||
+		( await frontendInfoSummary.getAttribute( 'data-default-icon' ) ) !==
+			null;
+	expect( infoHasDefaultFlag ).toBe( true );
 
-	const infoDataDefaultIcon =
-		await frontendInfoSummary.getAttribute( 'data-default-icon' );
+	const infoTypeClass = await readAdmonitionTypeClass( frontendInfoSummary );
 	const frontendInfoMask = await readBeforeMaskImage( frontendInfoSummary );
 	const frontendInfoMaskValue =
 		frontendInfoMask.webkitMaskImage !== 'none'
@@ -345,7 +368,8 @@ test( 'admonition default icon mask renders and changes when type changes', asyn
 	expect( infoHasRenderedIcon ).toBe( true );
 	expect( frontendInfoMask.width ).not.toBe( '0px' );
 	expect( frontendInfoMask.height ).not.toBe( '0px' );
-	expect( infoDataDefaultIcon ).not.toBe( warningDataDefaultIcon );
+	expect( infoTypeClass ).toMatch( /admonition-type-info/ );
+	expect( warningTypeClass ).toMatch( /admonition-type-warning/ );
 	if (
 		frontendWarningMaskValue !== 'none' &&
 		frontendInfoMaskValue !== 'none'
