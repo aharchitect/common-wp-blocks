@@ -115,6 +115,23 @@ async function goToFrontendPost( page, resolvedBase, postId ) {
 	await page.waitForLoadState( 'domcontentloaded' );
 }
 
+async function ensureBlockInspectorVisible( page ) {
+	const settingsButton = page.getByRole( 'button', { name: /^Settings$/i } );
+	if ( await settingsButton.count() ) {
+		const expanded = await settingsButton.first().getAttribute(
+			'aria-expanded'
+		);
+		if ( expanded !== 'true' ) {
+			await settingsButton.first().click();
+		}
+	}
+
+	const blockTab = page.getByRole( 'tab', { name: /^Block$/i } );
+	if ( await blockTab.count() ) {
+		await blockTab.first().click();
+	}
+}
+
 // E2E: Insert an admonition block, publish, and verify front-end rendering.
 test( 'create and render admonition block', async ( { page, baseURL } ) => {
 	test.setTimeout( 90000 ); // Allow up to 90s for slow environments
@@ -243,8 +260,18 @@ test( 'admonition default icon mask renders and changes when type changes', asyn
 
 	const summary = admonitionBlock.locator( 'summary.admonition-header' );
 	await summary.click();
+	await ensureBlockInspectorVisible( page );
 
 	const typeSelect = page.getByLabel( 'Admonition Type (for base styling)' );
+	if ( ! ( await typeSelect.count() ) ) {
+		const blockToolbarButton = page.getByRole( 'button', {
+			name: /Admonition \(Note, Tip, Warning\)/i,
+		} );
+		if ( await blockToolbarButton.count() ) {
+			await blockToolbarButton.first().click();
+		}
+		await ensureBlockInspectorVisible( page );
+	}
 	await expect( typeSelect ).toBeVisible( { timeout: 15000 } );
 
 	await typeSelect.selectOption( { value: 'warning' } );
