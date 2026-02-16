@@ -2,6 +2,10 @@ const { test, expect } = require( '@playwright/test' );
 const logger = require( './logger' );
 const { loginToWordPress, createPost } = require( './helper-wordpress' );
 
+const CUSTOM_ICON_DATA =
+	'data:image/png;base64,' +
+	'iVBORw0KGgoAAAANSUhEUgAAADMAAAAzCAYAAAA6oTAqAAAACXBIWXMAAAsTAAALEwEAmpwYAAAD5ElEQVR4nNWZW4hOURTHfy4zlMuTSwi5DQ/iwYMiGeVBzYOEBw/epPFgJHdKxAOayHXI3YO7aIwhBrmMh6FExjX3uwwjlMuYo13rq91u73O++eY7+zvzr9V3zt7rnL3+31lr77XXhuZhNfANqAI60oIxFwg0mUkLxQSgwSCj2mzoDBQA7UkgOgFvDCK7LXp9gXKN9F/gKNCbBGG9QeQKkG/o9ATeGXopeQp0JwHoDPzUDPshX8DEPgeRlGwmAZhhGLXCofctgkwdCcB2w6heFp38CCIpaUuOcUYz5kuI3vMIIs9IAI5oBjUC3Rx6yyLILCGBC+VhoLXD1c46iFQCeSQAXWUG0407B/S36LYBZgHV4lbXgeIkxIqOYsu/3SAuOBEY0QQpENI5xXKJmSAL8lMW3vmO2dELJgEvskQoJb+ALeLO3tEOmA08zjKpl8BQcoR5QEWGhn8G/ljaHwEdfBMZI/GzJUMyG4GdwAbgq9G3wDeZGzJwpmS2yq+aBIZI3ATamuQN47SB9xgZdboz2V7tfizwSbtXBL2hXBv4HnC5iWSUfq1cN4qr6f07fBHpIbvHQDOmrIlkyrT1Sl2/NvpH+yKzKMT/mxovajN3y+ir8EWkFfDQYtx2S6HDJQ2iryaO25bpur8vMqMcBlZbDHOJ0psmSaje/lsmAm9Y5zBQTau70iSj6gDHLM+Xyn7IGx6EGLktTTKrpPSUuq8H1sgW45EvIoNCDFTlpVNpklF6K4GTsjiWioul+gf7ysNcBp4HnqRJ5onov7XETSDjxI4LIQaqRe5fmmT+ib6rvzJuIvkRKYsrXi5mEF8/LJVSL1NylHFTMpwsxsRJZmnIwI2WImEgQT3KyIZ1MmHb78VxknGVjwIp/FVa2u8Ca4E7jrgIKxiejDOFqQsZ+DTwytJ+UGoFhxzb44qIqT4W9EsjXmwuUxYSHy7XDDTpEweZyRkG/7Y0+10yNQ4yq3NEpjTuEwBbOm9bANWatF+u91tKu4E8F7ZtuBQHmfchAz50LIw3gRq5rpF7U6dKEkvXuz9km0ivCFc4Dny0tOtfQ32lAw5jT0S8v0s2yUxoZrykpCwJmcCcDMlMB4qA8fI7PUMyxdkkkyo8fBffV7WuhWKg2quXOIwwz/x7O/RK5D1F8t69Ms536d+UTTIj5SzFdkqGw33qJWswUW/RVc/b0Fo2aWp8b7hmMVCdlNlQbdG9SoJQZzFQpSk22NajsJNrr+jpiAN1bmPDbIe+ek/OMdBhXKFDv9Ch763oFwYVpPcNw16FHI/nWWrKtSGTC74xQNIZtZtUAT4sQn+46Cl9lc5k5av8B2fjt7+BNdM5AAAAAElFTkSuQmCC';
+
 async function dismissWelcomeGuideIfPresent( page ) {
 	for ( let i = 0; i < 8; i++ ) {
 		const guideDialog = page.getByRole( 'dialog', {
@@ -377,4 +381,84 @@ test( 'admonition default icon mask renders and changes when type changes', asyn
 		expect( frontendInfoMaskValue ).not.toBe( frontendWarningMaskValue );
 	}
 	await infoFrontendPage.close();
+} );
+
+test( 'admonition custom base64 icon is persisted and rendered via mask', async ( {
+	page,
+	baseURL,
+} ) => {
+	test.setTimeout( 90000 );
+	const resolvedBase =
+		baseURL || process.env.WP_BASE_URL || 'http://localhost:8000';
+
+	await loginToWordPress( page, resolvedBase, 'admin', 'pass' );
+	await dismissWelcomeGuideIfPresent( page );
+	await createPost(
+		page,
+		resolvedBase,
+		'Admonition Custom Icon E2E',
+		'Base paragraph for insertion.'
+	);
+	await dismissWelcomeGuideIfPresent( page );
+
+	const editor = await getEditorContext( page );
+	await insertAdmonitionBlock( page, editor );
+
+	const admonitionBlock = editor
+		.locator( '.wp-block-common-wp-blocks-admonition' )
+		.last();
+	await admonitionBlock.waitFor( { state: 'visible', timeout: 15000 } );
+
+	const summary = admonitionBlock.locator( 'summary.admonition-header' );
+	await summary.click();
+	await ensureBlockInspectorVisible( page );
+
+	const customIconField = page.getByLabel(
+		/Custom Icon \(Paste SVG or Base64 URL\)/i
+	);
+	await expect( customIconField ).toBeVisible( { timeout: 15000 } );
+	await customIconField.fill( CUSTOM_ICON_DATA );
+	await customIconField.press( 'Tab' );
+
+	await savePost( page );
+	const postId =
+		( await getCurrentPostId( page ) ) ||
+		getPostIdFromEditorUrl( page.url() );
+	if ( ! postId ) {
+		throw new Error( 'Could not determine post ID from editor URL.' );
+	}
+
+	const frontendPage = await page.context().newPage();
+	await goToFrontendPost( frontendPage, resolvedBase, postId );
+
+	const frontendBlock = frontendPage
+		.locator( '.wp-block-common-wp-blocks-admonition' )
+		.first();
+	const frontendSummary = frontendBlock.locator( 'summary.admonition-header' );
+	await expect( frontendSummary ).toBeVisible( { timeout: 15000 } );
+
+	expect( await frontendSummary.getAttribute( 'data-has-custom-icon' ) ).toBe(
+		'true'
+	);
+	expect(
+		await frontendSummary.getAttribute( 'data-has-default-icon' )
+	).toBeNull();
+	expect( await frontendSummary.getAttribute( 'data-default-icon' ) ).toBeNull();
+
+	const blockStyle = ( await frontendBlock.getAttribute( 'style' ) ) || '';
+	expect( blockStyle ).toMatch( /--admonition-icon-mask:\s*url\(/ );
+	expect( blockStyle ).toContain(
+		'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADMAAAAz'
+	);
+
+	const frontendMask = await readBeforeMaskImage( frontendSummary );
+	const frontendMaskValue =
+		frontendMask.webkitMaskImage !== 'none'
+			? frontendMask.webkitMaskImage
+			: frontendMask.maskImage;
+	expect( frontendMaskValue ).not.toBe( 'none' );
+	expect( frontendMask.width ).not.toBe( '0px' );
+	expect( frontendMask.height ).not.toBe( '0px' );
+
+	await frontendPage.close();
 } );
