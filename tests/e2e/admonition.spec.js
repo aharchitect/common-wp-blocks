@@ -31,6 +31,41 @@ async function dismissWelcomeGuideIfPresent( page ) {
 	}
 }
 
+async function getEditorContext( page ) {
+	const iframeCount = await page
+		.locator( 'iframe[name="editor-canvas"]' )
+		.count();
+	return iframeCount > 0
+		? page.frameLocator( 'iframe[name="editor-canvas"]' )
+		: page;
+}
+
+async function insertAdmonitionBlock( page, editor ) {
+	const lastParagraph = editor
+		.locator(
+			'.wp-block-paragraph[contenteditable="true"], p.block-editor-rich-text__editable[contenteditable="true"]'
+		)
+		.last();
+	await lastParagraph.waitFor( { state: 'visible', timeout: 15000 } );
+	await lastParagraph.click();
+	await page.keyboard.press( 'End' );
+	await page.keyboard.press( 'Enter' );
+	await page.keyboard.type( '/admonition', { delay: 20 } );
+	await page.keyboard.press( 'Enter' );
+}
+
+async function readBeforeMaskImage( locator ) {
+	return locator.evaluate( ( el ) => {
+		const pseudo = window.getComputedStyle( el, '::before' );
+		return {
+			maskImage: pseudo.maskImage,
+			webkitMaskImage: pseudo.webkitMaskImage,
+			width: pseudo.width,
+			height: pseudo.height,
+		};
+	} );
+}
+
 // E2E: Insert an admonition block, publish, and verify front-end rendering.
 test( 'create and render admonition block', async ( { page, baseURL } ) => {
 	test.setTimeout( 90000 ); // Allow up to 90s for slow environments
@@ -68,29 +103,11 @@ test( 'create and render admonition block', async ( { page, baseURL } ) => {
 	await dismissWelcomeGuideIfPresent( page );
 
 	// Detect whether editor is rendered inside iframe and scope selectors accordingly.
-	const iframeCount = await page
-		.locator( 'iframe[name="editor-canvas"]' )
-		.count();
-	const editor =
-		iframeCount > 0
-			? page.frameLocator( 'iframe[name="editor-canvas"]' )
-			: page;
+	const editor = await getEditorContext( page );
 
 	// Create the next block by placing cursor at the end of current paragraph and pressing Enter.
-	const lastParagraph = editor
-		.locator(
-			'.wp-block-paragraph[contenteditable="true"], p.block-editor-rich-text__editable[contenteditable="true"]'
-		)
-		.last();
-	await lastParagraph.waitFor( { state: 'visible', timeout: 15000 } );
 	await dismissWelcomeGuideIfPresent( page );
-	await lastParagraph.click();
-	await page.keyboard.press( 'End' );
-	await page.keyboard.press( 'Enter' );
-
-	// Insert Admonition block via slash command.
-	await page.keyboard.type( '/admonition', { delay: 20 } );
-	await page.keyboard.press( 'Enter' );
+	await insertAdmonitionBlock( page, editor );
 
 	// Fill admonition title.
 	const admonitionTitle = editor
@@ -147,4 +164,67 @@ test( 'create and render admonition block', async ( { page, baseURL } ) => {
 	await expect(
 		admonitionBlock.locator( '.admonition-content' ).first()
 	).toContainText( admonitionContentText );
+} );
+
+test( 'admonition default icon mask renders and changes when type changes', async ( {
+	page,
+	baseURL,
+} ) => {
+	test.setTimeout( 90000 );
+	const resolvedBase =
+		baseURL || process.env.WP_BASE_URL || 'http://localhost:8000';
+
+	await loginToWordPress( page, resolvedBase, 'admin', 'pass' );
+	await dismissWelcomeGuideIfPresent( page );
+	await createPost(
+		page,
+		resolvedBase,
+		'Admonition Icon Mask E2E',
+		'Base paragraph for insertion.'
+	);
+	await dismissWelcomeGuideIfPresent( page );
+
+	const editor = await getEditorContext( page );
+	await insertAdmonitionBlock( page, editor );
+
+	const admonitionBlock = editor
+		.locator( '.wp-block-common-wp-blocks-admonition' )
+		.last();
+	await admonitionBlock.waitFor( { state: 'visible', timeout: 15000 } );
+
+	const summary = admonitionBlock.locator( 'summary.admonition-header' );
+	await summary.click();
+
+	const typeSelect = page.getByLabel( 'Admonition Type (for base styling)' );
+	await expect( typeSelect ).toBeVisible( { timeout: 15000 } );
+
+	await typeSelect.selectOption( { value: 'warning' } );
+	await expect( admonitionBlock ).toHaveAttribute(
+		'class',
+		/admonition-type-warning/
+	);
+
+	const warningMask = await readBeforeMaskImage( summary );
+	const warningMaskValue =
+		warningMask.webkitMaskImage !== 'none'
+			? warningMask.webkitMaskImage
+			: warningMask.maskImage;
+	expect( warningMaskValue ).not.toBe( 'none' );
+	expect( warningMask.width ).not.toBe( '0px' );
+	expect( warningMask.height ).not.toBe( '0px' );
+
+	await typeSelect.selectOption( { value: 'info' } );
+	await expect( admonitionBlock ).toHaveAttribute(
+		'class',
+		/admonition-type-info/
+	);
+
+	await expect
+		.poll( async () => {
+			const infoMask = await readBeforeMaskImage( summary );
+			return infoMask.webkitMaskImage !== 'none'
+				? infoMask.webkitMaskImage
+				: infoMask.maskImage;
+		} )
+		.not.toBe( warningMaskValue );
 } );
