@@ -70,7 +70,7 @@ export default function save( { attributes } ) {
 				iconAttribute={ iconAttribute }
 				isCollapsible={ isCollapsible }
 				isOpen={ isOpen }
-				titleTagName="summary" // The correct tag for the frontend
+				titleTagName="span" // Keep title text inside summary without nesting summary elements
 				iconElement={ null } // Icons are handled by CSS masking on summary::before
 				mode="save"
 			/>

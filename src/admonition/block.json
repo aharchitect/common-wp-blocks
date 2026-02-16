@@ -48,7 +48,7 @@
 		"title": {
 			"type": "string",
 			"source": "html",
-			"selector": "summary",
+			"selector": ".admonition-title",
 			"default": "Note"
 		},
 		"customIconData": {

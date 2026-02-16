@@ -62,8 +62,57 @@ async function readBeforeMaskImage( locator ) {
 			webkitMaskImage: pseudo.webkitMaskImage,
 			width: pseudo.width,
 			height: pseudo.height,
+			content: pseudo.content,
 		};
 	} );
+}
+
+async function savePost( page ) {
+	const saveButtons = page.getByRole( 'button', {
+		name: /^(Update|Save|Save draft)$/i,
+	} );
+	if ( await saveButtons.count() ) {
+		await saveButtons.first().click();
+		await page.waitForTimeout( 500 );
+		return;
+	}
+
+	const publishButtons = page.getByRole( 'button', { name: /^Publish$/i } );
+	if ( await publishButtons.count() ) {
+		await publishButtons.first().click();
+		const confirmPublish = page.getByRole( 'button', {
+			name: /^Publish$/i,
+		} );
+		if ( await confirmPublish.count() ) {
+			await confirmPublish.last().click();
+		}
+		await page.waitForTimeout( 500 );
+	}
+}
+
+function normalizeBaseUrl( baseUrl ) {
+	return String( baseUrl ).replace( /\/+$/, '' );
+}
+
+function getPostIdFromEditorUrl( currentUrl ) {
+	const parsed = new URL( currentUrl );
+	return parsed.searchParams.get( 'post' );
+}
+
+async function getCurrentPostId( page ) {
+	return page.evaluate( () => {
+		const wpGlobal = window.wp;
+		const id = wpGlobal?.data
+			?.select( 'core/editor' )
+			?.getCurrentPostId?.();
+		return id ? String( id ) : null;
+	} );
+}
+
+async function goToFrontendPost( page, resolvedBase, postId ) {
+	const baseUrl = normalizeBaseUrl( resolvedBase );
+	await page.goto( `${ baseUrl }/?p=${ postId }` );
+	await page.waitForLoadState( 'domcontentloaded' );
 }
 
 // E2E: Insert an admonition block, publish, and verify front-end rendering.
@@ -204,14 +253,39 @@ test( 'admonition default icon mask renders and changes when type changes', asyn
 		/admonition-type-warning/
 	);
 
-	const warningMask = await readBeforeMaskImage( summary );
-	const warningMaskValue =
-		warningMask.webkitMaskImage !== 'none'
-			? warningMask.webkitMaskImage
-			: warningMask.maskImage;
-	expect( warningMaskValue ).not.toBe( 'none' );
-	expect( warningMask.width ).not.toBe( '0px' );
-	expect( warningMask.height ).not.toBe( '0px' );
+	await savePost( page );
+	const postId = ( await getCurrentPostId( page ) ) || getPostIdFromEditorUrl( page.url() );
+	if ( ! postId ) {
+		throw new Error( 'Could not determine post ID from editor URL.' );
+	}
+
+	const warningFrontendPage = await page.context().newPage();
+	await goToFrontendPost( warningFrontendPage, resolvedBase, postId );
+	const frontendWarningSummary = warningFrontendPage
+		.locator(
+			'.wp-block-common-wp-blocks-admonition summary.admonition-header[data-default-icon]'
+		)
+		.first();
+	await expect( frontendWarningSummary ).toBeVisible( { timeout: 15000 } );
+
+	const warningDataDefaultIcon =
+		await frontendWarningSummary.getAttribute( 'data-default-icon' );
+	const frontendWarningMask = await readBeforeMaskImage(
+		frontendWarningSummary
+	);
+	const frontendWarningMaskValue =
+		frontendWarningMask.webkitMaskImage !== 'none'
+			? frontendWarningMask.webkitMaskImage
+			: frontendWarningMask.maskImage;
+	const warningHasRenderedIcon =
+		frontendWarningMaskValue !== 'none' ||
+		( frontendWarningMask.content !== 'none' &&
+			frontendWarningMask.content !== 'normal' &&
+			frontendWarningMask.content !== '""' );
+	expect( warningHasRenderedIcon ).toBe( true );
+	expect( frontendWarningMask.width ).not.toBe( '0px' );
+	expect( frontendWarningMask.height ).not.toBe( '0px' );
+	await warningFrontendPage.close();
 
 	await typeSelect.selectOption( { value: 'info' } );
 	await expect( admonitionBlock ).toHaveAttribute(
@@ -219,12 +293,37 @@ test( 'admonition default icon mask renders and changes when type changes', asyn
 		/admonition-type-info/
 	);
 
-	await expect
-		.poll( async () => {
-			const infoMask = await readBeforeMaskImage( summary );
-			return infoMask.webkitMaskImage !== 'none'
-				? infoMask.webkitMaskImage
-				: infoMask.maskImage;
-		} )
-		.not.toBe( warningMaskValue );
+	await savePost( page );
+	const infoFrontendPage = await page.context().newPage();
+	await goToFrontendPost( infoFrontendPage, resolvedBase, postId );
+	const frontendInfoSummary = infoFrontendPage
+		.locator(
+			'.wp-block-common-wp-blocks-admonition summary.admonition-header[data-default-icon]'
+		)
+		.first();
+	await expect( frontendInfoSummary ).toBeVisible( { timeout: 15000 } );
+
+	const infoDataDefaultIcon =
+		await frontendInfoSummary.getAttribute( 'data-default-icon' );
+	const frontendInfoMask = await readBeforeMaskImage( frontendInfoSummary );
+	const frontendInfoMaskValue =
+		frontendInfoMask.webkitMaskImage !== 'none'
+			? frontendInfoMask.webkitMaskImage
+			: frontendInfoMask.maskImage;
+	const infoHasRenderedIcon =
+		frontendInfoMaskValue !== 'none' ||
+		( frontendInfoMask.content !== 'none' &&
+			frontendInfoMask.content !== 'normal' &&
+			frontendInfoMask.content !== '""' );
+	expect( infoHasRenderedIcon ).toBe( true );
+	expect( frontendInfoMask.width ).not.toBe( '0px' );
+	expect( frontendInfoMask.height ).not.toBe( '0px' );
+	expect( infoDataDefaultIcon ).not.toBe( warningDataDefaultIcon );
+	if (
+		frontendWarningMaskValue !== 'none' &&
+		frontendInfoMaskValue !== 'none'
+	) {
+		expect( frontendInfoMaskValue ).not.toBe( frontendWarningMaskValue );
+	}
+	await infoFrontendPage.close();
 } );

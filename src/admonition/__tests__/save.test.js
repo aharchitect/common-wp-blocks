@@ -75,7 +75,7 @@ describe( 'Save', () => {
 		// 2. Check AdmonitionStructure props
 		const structure = screen.getByTestId( 'admonition-structure-save' );
 		expect( structure ).toHaveAttribute( 'data-title', 'Note Title' );
-		expect( structure ).toHaveAttribute( 'data-tag', 'summary' );
+		expect( structure ).toHaveAttribute( 'data-tag', 'span' );
 		expect( structure ).toHaveAttribute( 'data-is-open', 'false' );
 
 		// 3. Check default iconAttribute logic
