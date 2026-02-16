@@ -81,13 +81,21 @@ $admonition-config: (
     /* 2. Default Icon Logic: Use a Dashicon font for default types */
     summary[data-default-icon]:not([data-default-icon=""])::before,
     .admonition-header[data-default-icon]:not([data-default-icon=""])::before {
-        font-family: 'dashicons';
-        content: attr(data-default-icon);
-        mask: none;
-        background-color: unset;
-        color: inherit;
-        font-size: 1.25em;
-        line-height: 1;
+        content: "";
+        width: 1.25em;
+        height: 1.25em;
+        margin-right: 0.5em;
+        display: block;
+        flex-shrink: 0;
+        background-color: currentColor;
+        mask-image: var(--admonition-default-icon);
+        -webkit-mask-image: var(--admonition-default-icon);
+        mask-repeat: no-repeat;
+        -webkit-mask-repeat: no-repeat;
+        mask-size: contain;
+        -webkit-mask-size: contain;
+        mask-position: center;
+        -webkit-mask-position: center;
     }
 
 
@@ -190,11 +198,13 @@ $admonition-config: (
         $sass-primary: map.get($config, primary);
         $sass-block-bg: map.get($config, block-bg);
         $sass-header-bg: map.get($config, header-bg);
+        $sass-icon: map.get($config, icon);
 
         /* Define a custom property on the block root that can be overridden by user styles */
         --admonition-primary-color: #{$sass-primary};
         --admonition-header-color: #{$sass-header-bg};
         --admonition-block-bg-color: #{$sass-block-bg};
+        --admonition-default-icon: url('#{$sass-icon}');
 
         /* 1. Block wrapper style (affected by user's color picker) */
         border-left-color: var(--admonition-primary-color);
