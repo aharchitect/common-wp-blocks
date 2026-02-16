@@ -1,16 +1,20 @@
 === Common Wp Blocks ===
-Contributors:      The WordPress Contributors and aharchitect
+Contributors:      aharchitect
 Tags:              block, admonition, note, custom
-Tested up to:      6.7
+Requires at least: 6.3
+Tested up to:      6.9
 Stable tag:        0.1.0
+Requires PHP:      7.0
 License:           GPL-2.0-or-later
 License URI:       https://www.gnu.org/licenses/gpl-2.0.html
 
-Common Wp Blocks: A collection of essential, opinionated Gutenberg blocks.
+Common Blocks: A collection of essential, opinionated Gutenberg blocks.
 
 == Description ==
 
 This plugin provides a collection of useful, highly customizable Gutenberg blocks designed to enhance content structure and presentation in WordPress.
+
+= Admonition =
 
 The first block included is the **Admonition Block**, a flexible note/alert box that supports:
 
@@ -23,21 +27,16 @@ The first block included is the **Admonition Block**, a flexible note/alert box 
 
 This section describes how to install the plugin and get it working.
 
-e.g.
-
 1. Upload the plugin files to the `/wp-content/plugins/common-wp-blocks` directory, or install the plugin through the WordPress plugins screen directly.
 1. Activate the plugin through the 'Plugins' screen in WordPress
 
+== Upgrade Notice ==
+
+No upgrades yet.
 
 == Frequently Asked Questions ==
 
-= A question that someone might have =
-
-An answer to that question.
-
-= What about foo bar? =
-
-Answer to foo bar dilemma.
+none yet.
 
 == Screenshots ==
 
