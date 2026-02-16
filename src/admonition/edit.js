@@ -14,7 +14,6 @@ import { useBlockProps, InspectorControls } from '@wordpress/block-editor';
 import {
 	SelectControl,
 	PanelBody,
-	Icon,
 	ToggleControl,
 	TextareaControl,
 } from '@wordpress/components';
@@ -52,31 +51,23 @@ export default function Edit( { attributes, setAttributes } ) {
 	// If not collapsible OR if collapsible AND initially expanded
 	const editorOpenState = ! isCollapsible || isInitiallyExpanded;
 
+	// Use the same icon-mask pipeline as save(): CSS variable on wrapper + data flags on summary.
+	const blockStyle = customIconData
+		? {
+				'--admonition-icon-mask': `url('${ customIconData }')`,
+		  }
+		: {};
+
 	// blockProps manages classes and inline styles (for color controls)
 	const blockProps = useBlockProps( {
 		className: `admonition-type-${ type }`,
+		style: blockStyle,
 	} );
+	blockProps[ 'data-is-collapsible' ] = isCollapsible ? 'true' : 'false';
 
-	// --- Icon Rendering Logic ---
-	let currentIcon;
-	if ( customIconData ) {
-		// If custom data exists, use a simple div with the CSS mask applied
-		currentIcon = (
-			<div
-				className="admonition-icon custom-mask-icon"
-				style={ { maskImage: `url("${ customIconData }")` } }
-			/>
-		);
-	} else {
-		// Use the central map for the icon lookup
-		currentIcon = (
-			<Icon
-				icon={ ADMONITION_TYPES[ type ]?.dashicon }
-				className="admonition-icon"
-			/>
-		);
-	}
-	// ----------------------------
+	const iconAttribute = customIconData
+		? { 'data-has-custom-icon': 'true' }
+		: { 'data-has-default-icon': 'true' };
 
 	return (
 		<>
@@ -150,11 +141,11 @@ export default function Edit( { attributes, setAttributes } ) {
 			<div { ...blockProps }>
 				<AdmonitionStructure
 					title={ title }
-					iconAttribute={ {} } // No need for data attributes in the editor
+					iconAttribute={ iconAttribute }
 					isCollapsible={ isCollapsible }
 					isOpen={ editorOpenState }
 					titleTagName="h4"
-					iconElement={ currentIcon }
+					iconElement={ null } // Editor now uses the same summary::before icon path as frontend
 					mode="edit"
 					// Pass a function that correctly calls setAttributes for the title
 					setAttributes={ ( newTitle ) =>
