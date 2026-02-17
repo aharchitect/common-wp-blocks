@@ -50,7 +50,9 @@ export default function AdmonitionStructure( {
 					tagName={ titleTagName }
 					value={ title }
 					onChange={ isEditing ? setAttributes : undefined }
-					placeholder="Enter Title (e.g., Note)"
+					placeholder={
+						isEditing ? 'Enter Title (e.g., Note)' : undefined
+					}
 					className="admonition-title"
 				/>
 

@@ -6,8 +6,6 @@
  */
 import { useBlockProps } from '@wordpress/block-editor';
 
-// Import shared constants
-import { ICON_MAP } from './constants';
 import AdmonitionStructure from './AdmonitionStructure';
 
 /**
@@ -48,8 +46,8 @@ export default function save( { attributes } ) {
 		// We will use 'data-has-custom-icon' as a clear flag.
 		iconAttribute[ 'data-has-custom-icon' ] = 'true';
 	} else {
-		// If no custom icon, provide the dashicon mapping for CSS to use.
-		iconAttribute[ 'data-default-icon' ] = ICON_MAP[ type ];
+		// If no custom icon, set a boolean flag so CSS applies the predefined icon.
+		iconAttribute[ 'data-has-default-icon' ] = 'true';
 	}
 	// -----------------------------------------------------
 
@@ -70,7 +68,7 @@ export default function save( { attributes } ) {
 				iconAttribute={ iconAttribute }
 				isCollapsible={ isCollapsible }
 				isOpen={ isOpen }
-				titleTagName="summary" // The correct tag for the frontend
+				titleTagName="span" // Keep title text inside summary without nesting summary elements
 				iconElement={ null } // Icons are handled by CSS masking on summary::before
 				mode="save"
 			/>

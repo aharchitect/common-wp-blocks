@@ -11,9 +11,11 @@ jest.mock( '../AdmonitionStructure', () => ( {
 	// Mock AdmonitionStructure to return a simple identifiable component
 	// It receives props like title, isOpen, iconElement, etc.
 	__esModule: true,
-	default: jest.fn( ( { title, isOpen, iconElement } ) => (
+	default: jest.fn( ( { title, isOpen, iconElement, iconAttribute } ) => (
 		<div data-testid="admonition-structure" data-is-open={ isOpen }>
-			<span data-testid="admonition-title">{ title }</span>
+			<summary data-testid="mock-summary" { ...iconAttribute }>
+				<span data-testid="admonition-title">{ title }</span>
+			</summary>
 			<div data-testid="icon-wrapper">{ iconElement }</div>
 		</div>
 	) ),
@@ -24,6 +26,7 @@ jest.mock( '@wordpress/block-editor', () => ( {
 	// Mock useBlockProps to return simple props
 	useBlockProps: jest.fn( ( props ) => ( {
 		className: props.className,
+		style: props.style,
 		'data-block-id': 'mocked-id',
 	} ) ),
 	RichText: ( { value } ) => (
@@ -63,14 +66,9 @@ jest.mock( '@wordpress/components', () => ( {
 			{ label }: { checked ? 'On' : 'Off' }
 		</button>
 	),
-	// Mock PanelBody and Icon to simple wrappers
+	// Mock PanelBody
 	PanelBody: ( { children } ) => (
 		<div data-testid="panel-body">{ children }</div>
-	),
-	Icon: ( { icon, className } ) => (
-		<span data-testid="dashicon" className={ className }>
-			{ icon }
-		</span>
 	),
 	TextareaControl: ( { value, onChange } ) => (
 		<textarea
@@ -126,38 +124,36 @@ describe( 'Edit', () => {
 			mockAttributes.title
 		);
 
-		// Check icon rendering (should be a Dashicon)
-		expect( screen.getByTestId( 'icon-wrapper' ) ).toContainElement(
-			screen.getByTestId( 'dashicon' )
+		// Check icon path wiring for default icons (CSS ::before in editor/frontend)
+		expect( screen.getByTestId( 'mock-summary' ) ).toHaveAttribute(
+			'data-has-default-icon',
+			'true'
 		);
-		expect( screen.getByTestId( 'dashicon' ) ).toHaveTextContent(
-			ADMONITION_TYPES.note.dashicon
-		);
+		expect( screen.getByTestId( 'icon-wrapper' ) ).toBeEmptyDOMElement();
 	} );
 
 	// --- TEST 2: Custom Icon Logic ---
-	it( 'should render a custom mask icon when customIconData is set', () => {
+	it( 'should wire custom icon mask data when customIconData is set', () => {
 		const customIcon = 'data:image/svg+xml;...';
 		mockAttributes.customIconData = customIcon;
 
-		render(
+		const { container } = render(
 			<Edit
 				attributes={ mockAttributes }
 				setAttributes={ mockSetAttributes }
 			/>
 		);
 
-		// Check that the Dashicon is NOT rendered
-		expect( screen.queryByTestId( 'dashicon' ) ).toBeNull();
+		// Editor should use the same summary flag path as frontend.
+		expect( screen.getByTestId( 'mock-summary' ) ).toHaveAttribute(
+			'data-has-custom-icon',
+			'true'
+		);
+		expect( screen.getByTestId( 'icon-wrapper' ) ).toBeEmptyDOMElement();
 
-		// Check that the custom mask icon div is rendered
-		// We will find the icon wrapper and then query for the specific class.
-		const iconWrapper = screen.getByTestId( 'icon-wrapper' );
-		const customIconDiv = iconWrapper.querySelector( '.custom-mask-icon' );
-
-		expect( customIconDiv ).toBeInTheDocument();
-		expect( customIconDiv ).toHaveStyle(
-			`mask-image: url("${ customIcon }")`
+		const blockWrapper = container.querySelector( '.admonition-type-note' );
+		expect( blockWrapper?.getAttribute( 'style' ) || '' ).toContain(
+			'--admonition-icon-mask'
 		);
 	} );
 

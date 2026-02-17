@@ -2,6 +2,7 @@
 .PHONY: e2e-up e2e-install e2e-test e2e-down e2e-run
 
 COMPOSE_FILE=docker-compose.playwright.yml
+WP_INSTALL_URL ?= http://localhost:8000
 
 e2e-up:
 	docker compose -f $(COMPOSE_FILE) pull
@@ -13,7 +14,13 @@ e2e-install:
 	if [ -z "$$WORDPRESS_CONTAINER" ]; then echo "WordPress container not found" ; exit 1 ; fi ; \
 	docker run --rm --volumes-from "$$WORDPRESS_CONTAINER" --network $$(docker network ls --filter name=$$(basename "$(PWD)")_default -q) \
 		-e WORDPRESS_DB_HOST='db:3306' -e WORDPRESS_DB_USER='wordpress' -e WORDPRESS_DB_PASSWORD='wordpress' -e WORDPRESS_DB_NAME='wordpress' \
-		wordpress:cli wp core install --url=http://wordpress --title=wp --admin_user=admin --admin_password=pass --admin_email=admin@example.com --skip-email --path=/var/www/html || true ; \
+		wordpress:cli wp core install --url=$(WP_INSTALL_URL) --title=wp --admin_user=admin --admin_password=pass --admin_email=admin@example.com --skip-email --path=/var/www/html || true ; \
+	docker run --rm --volumes-from "$$WORDPRESS_CONTAINER" --network $$(docker network ls --filter name=$$(basename "$(PWD)")_default -q) \
+		-e WORDPRESS_DB_HOST='db:3306' -e WORDPRESS_DB_USER='wordpress' -e WORDPRESS_DB_PASSWORD='wordpress' -e WORDPRESS_DB_NAME='wordpress' \
+		wordpress:cli wp option update home $(WP_INSTALL_URL) --path=/var/www/html || true ; \
+	docker run --rm --volumes-from "$$WORDPRESS_CONTAINER" --network $$(docker network ls --filter name=$$(basename "$(PWD)")_default -q) \
+		-e WORDPRESS_DB_HOST='db:3306' -e WORDPRESS_DB_USER='wordpress' -e WORDPRESS_DB_PASSWORD='wordpress' -e WORDPRESS_DB_NAME='wordpress' \
+		wordpress:cli wp option update siteurl $(WP_INSTALL_URL) --path=/var/www/html || true ; \
 	docker run --rm --volumes-from "$$WORDPRESS_CONTAINER" --network $$(docker network ls --filter name=$$(basename "$(PWD)")_default -q) \
 		-e WORDPRESS_DB_HOST='db:3306' -e WORDPRESS_DB_USER='wordpress' -e WORDPRESS_DB_PASSWORD='wordpress' -e WORDPRESS_DB_NAME='wordpress' \
 		wordpress:cli wp plugin activate common-wp-blocks --path=/var/www/html || true

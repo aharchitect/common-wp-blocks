@@ -46,9 +46,14 @@ async function createPost( page, resolvedBase, titleText, contentText ) {
 
 	const loginForm = page.locator( '#loginform' );
 	if ( await loginForm.count() ) {
-		throw new Error(
-			'Unexpected redirect to wp-login.php while opening post editor. Authentication session is missing or expired.'
-		);
+		// Recover once from sporadic auth/session drops by re-login.
+		await loginToWordPress( page, resolvedBase, 'admin', 'pass' );
+		await page.goto( `${ baseUrl }/wp-admin/post-new.php` );
+		if ( await page.locator( '#loginform' ).count() ) {
+			throw new Error(
+				'Unexpected redirect to wp-login.php while opening post editor. Authentication session is missing or expired.'
+			);
+		}
 	}
 
 	// Wait for one of the editor roots used across Gutenberg versions.

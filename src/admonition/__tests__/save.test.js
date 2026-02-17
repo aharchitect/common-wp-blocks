@@ -2,7 +2,6 @@ import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 
 import save from '../save';
-import { ICON_MAP } from '../constants'; // Assumes ICON_MAP is correct
 
 // --- MOCKING WORDPRESS AND CHILD COMPONENTS ---
 
@@ -56,7 +55,7 @@ describe( 'Save', () => {
 	} );
 
 	// --- TEST 1: Default (non-collapsible, no custom icon) ---
-	it( 'should correctly render default markup with dashicon attribute and basic type class', () => {
+	it( 'should correctly render default markup with default-icon flag and basic type class', () => {
 		const { container } = render(
 			save( { attributes: defaultAttributes } )
 		);
@@ -75,7 +74,7 @@ describe( 'Save', () => {
 		// 2. Check AdmonitionStructure props
 		const structure = screen.getByTestId( 'admonition-structure-save' );
 		expect( structure ).toHaveAttribute( 'data-title', 'Note Title' );
-		expect( structure ).toHaveAttribute( 'data-tag', 'summary' );
+		expect( structure ).toHaveAttribute( 'data-tag', 'span' );
 		expect( structure ).toHaveAttribute( 'data-is-open', 'false' );
 
 		// 3. Check default iconAttribute logic
@@ -83,7 +82,7 @@ describe( 'Save', () => {
 			structure.getAttribute( 'data-icon-attrs' )
 		);
 		expect( iconAttrs ).toEqual( {
-			'data-default-icon': ICON_MAP.note,
+			'data-has-default-icon': 'true',
 		} );
 	} );
 

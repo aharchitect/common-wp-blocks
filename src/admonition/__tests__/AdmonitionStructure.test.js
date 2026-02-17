@@ -104,13 +104,13 @@ describe( 'AdmonitionStructure', () => {
 		const props = {
 			...defaultProps,
 			mode: 'save',
-			titleTagName: 'summary',
+			titleTagName: 'span',
 		}; // Set titleTagName for accuracy
 		render( <AdmonitionStructure { ...props } /> );
 
 		// 1. Check Title Component (RichText.Content)
 		const richTextContent = screen.getByTestId( 'rich-text-save' );
-		expect( richTextContent.tagName ).toBe( 'SUMMARY' ); // titleTagName is summary in this test
+		expect( richTextContent.tagName ).toBe( 'SPAN' ); // titleTagName is span in save mode
 		expect(
 			screen.queryByTestId( 'rich-text-edit' )
 		).not.toBeInTheDocument();

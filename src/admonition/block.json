@@ -5,7 +5,7 @@
 	"version": "0.1.0",
 	"title": "Admonition (Note, Tip, Warning)",
 	"category": "design",
-	"icon": "lightbulb",
+	"icon": "info",
 	"description": "A visually distinct, collapsible block for notes, tips, and warnings.",
 	"example": {
 		"attributes": {
@@ -48,7 +48,7 @@
 		"title": {
 			"type": "string",
 			"source": "html",
-			"selector": "summary",
+			"selector": ".admonition-title",
 			"default": "Note"
 		},
 		"customIconData": {
