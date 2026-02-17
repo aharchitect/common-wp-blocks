@@ -68,11 +68,20 @@ $admonition-config: (
     &[data-is-collapsible="false"] .admonition-header[data-has-custom-icon="true"]::before {
         /* Uses the CSS variable injected by the block's script */
         mask-image: var(--admonition-icon-mask);
+        -webkit-mask-image: var(--admonition-icon-mask);
         mask-size: contain;
+        -webkit-mask-size: contain;
         mask-repeat: no-repeat;
+        -webkit-mask-repeat: no-repeat;
         mask-position: center;
+        -webkit-mask-position: center;
         /* Icon color takes color from the surrounding text/header */
         background-color: currentColor;
+        width: 1.25em;
+        height: 1.25em;
+        margin-right: 0.5em;
+        display: block;
+        flex-shrink: 0;
         font-family: inherit; /* Override dashicons font if it was previously set */
         content: "";
         font-size: 1.25em; /* Standard size from details/summary styles */
@@ -174,6 +183,37 @@ $admonition-config: (
         .admonition-content {
             padding: 1em;
             border-top: none; /* No border if there's no collapse */
+        }
+
+        /* Backward compatibility for legacy saved markup that still uses
+           <details>/<summary> with class "is-static". Keep content visible
+           and disable interactivity when collapsing is off. */
+        details {
+            border-left-color: var(
+                --admonition-primary-color,
+                var(--wp--style--border--color, #007cba)
+            );
+
+            & > :not(summary) {
+                display: block;
+            }
+
+            summary.admonition-header {
+                background-color: var(--admonition-header-color);
+                color: var(--admonition-primary-color);
+                padding: 0.5em 1em;
+                pointer-events: none;
+                cursor: default;
+                list-style: none;
+            }
+
+            summary::-webkit-details-marker {
+                display: none;
+            }
+
+            .admonition-toggle-icon {
+                display: none;
+            }
         }
     }
 

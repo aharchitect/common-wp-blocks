@@ -126,13 +126,19 @@ describe( 'AdmonitionStructure', () => {
 	} );
 
 	// --- TEST 3: Static (Non-Collapsible) Rendering ---
-	it( 'should add the is-static class when isCollapsible is false', () => {
+	it( 'should render static header/content markup when isCollapsible is false', () => {
 		const props = { ...defaultProps, mode: 'save', isCollapsible: false };
 		const { container } = render( <AdmonitionStructure { ...props } /> );
 
-		const summary = container.querySelector( 'summary' );
-		expect( summary ).toHaveClass( 'admonition-header' );
-		expect( summary ).toHaveClass( 'is-static' );
+		expect( container.querySelector( 'details' ) ).toBeNull();
+		expect( container.querySelector( 'summary' ) ).toBeNull();
+
+		const staticHeader = container.querySelector( '.admonition-header' );
+		expect( staticHeader ).toBeInTheDocument();
+		expect( staticHeader ).toHaveAttribute( 'data-test-icon', 'edit' );
+
+		expect( screen.getByTestId( 'rich-text-save' ) ).toBeInTheDocument();
+		expect( screen.getByTestId( 'inner-blocks-save' ) ).toBeInTheDocument();
 	} );
 
 	// --- TEST 4: Collapsible State on <details> ---
@@ -146,5 +152,11 @@ describe( 'AdmonitionStructure', () => {
 		props = { ...defaultProps, mode: 'save', isOpen: false };
 		rerender( <AdmonitionStructure { ...props } /> );
 		expect( screen.getByRole( 'group' ) ).not.toHaveAttribute( 'open' );
+	} );
+
+	it( 'should not render the editor toggle icon when isCollapsible is false', () => {
+		const props = { ...defaultProps, mode: 'edit', isCollapsible: false };
+		render( <AdmonitionStructure { ...props } /> );
+		expect( screen.queryByTestId( 'mock-icon' ) ).not.toBeInTheDocument();
 	} );
 } );

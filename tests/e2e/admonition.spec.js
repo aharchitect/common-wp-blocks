@@ -143,6 +143,40 @@ async function ensureBlockInspectorVisible( page ) {
 	}
 }
 
+async function setEnableCollapsing( page, enabled ) {
+	await ensureBlockInspectorVisible( page );
+	const toggle = page
+		.getByRole( 'checkbox', { name: /Enable Collapsing/i } )
+		.first();
+	await expect( toggle ).toBeVisible( { timeout: 15000 } );
+	const current = await toggle.isChecked();
+	if ( current !== enabled ) {
+		await toggle.click();
+	}
+	if ( enabled ) {
+		await expect( toggle ).toBeChecked();
+	} else {
+		await expect( toggle ).not.toBeChecked();
+	}
+}
+
+async function setStartExpanded( page, enabled ) {
+	await ensureBlockInspectorVisible( page );
+	const toggle = page
+		.getByRole( 'checkbox', { name: /Start Expanded/i } )
+		.first();
+	await expect( toggle ).toBeVisible( { timeout: 15000 } );
+	const current = await toggle.isChecked();
+	if ( current !== enabled ) {
+		await toggle.click();
+	}
+	if ( enabled ) {
+		await expect( toggle ).toBeChecked();
+	} else {
+		await expect( toggle ).not.toBeChecked();
+	}
+}
+
 // E2E: Insert an admonition block, publish, and verify front-end rendering.
 test( 'create and render admonition block', async ( { page, baseURL } ) => {
 	test.setTimeout( 90000 ); // Allow up to 90s for slow environments
@@ -465,4 +499,148 @@ test( 'admonition custom base64 icon is persisted and rendered via mask', async 
 	expect( frontendMask.height ).not.toBe( '0px' );
 
 	await frontendPage.close();
+} );
+
+test( 'admonition collapsing modes work in editor and frontend', async ( {
+	page,
+	baseURL,
+} ) => {
+	test.setTimeout( 90000 );
+	const resolvedBase =
+		baseURL || process.env.WP_BASE_URL || 'http://localhost:8000';
+
+	await loginToWordPress( page, resolvedBase, 'admin', 'pass' );
+	await dismissWelcomeGuideIfPresent( page );
+	await createPost(
+		page,
+		resolvedBase,
+		'Admonition Collapsing Modes E2E',
+		'Base paragraph for insertion.'
+	);
+	await dismissWelcomeGuideIfPresent( page );
+
+	const editor = await getEditorContext( page );
+	await insertAdmonitionBlock( page, editor );
+
+	const admonitionBlock = editor
+		.locator( '.wp-block-common-wp-blocks-admonition' )
+		.last();
+	await admonitionBlock.waitFor( { state: 'visible', timeout: 15000 } );
+
+	const admonitionTitle = admonitionBlock
+		.locator( '.admonition-title[contenteditable="true"]' )
+		.first();
+	await expect( admonitionTitle ).toBeVisible( { timeout: 15000 } );
+	await admonitionTitle.click();
+	await page.keyboard.press( 'ControlOrMeta+a' );
+	await page.keyboard.type( 'E2E Collapse Modes Title' );
+
+	const bodyParagraph = admonitionBlock
+		.locator( '.admonition-content p[contenteditable="true"]' )
+		.first();
+	await expect( bodyParagraph ).toBeVisible( { timeout: 15000 } );
+	await bodyParagraph.click();
+	await page.keyboard.press( 'ControlOrMeta+a' );
+	await page.keyboard.type( 'Collapsible mode and static mode should differ.' );
+
+	await admonitionBlock.locator( '.admonition-header' ).first().click();
+
+	// 1) Editor collapsible mode: <details>/<summary> must exist and toggle.
+	await setEnableCollapsing( page, true );
+	await setStartExpanded( page, true );
+
+	const editorDetails = admonitionBlock.locator( 'details' ).first();
+	const editorSummary = admonitionBlock
+		.locator( 'summary.admonition-header' )
+		.first();
+	await expect( editorDetails ).toHaveCount( 1 );
+	await expect( editorSummary ).toBeVisible( { timeout: 15000 } );
+	const editorInitialOpen = await editorDetails.getAttribute( 'open' );
+
+	await editorSummary.click();
+	await expect
+		.poll( () => editorDetails.getAttribute( 'open' ) )
+		.not.toBe( editorInitialOpen );
+	await editorSummary.click();
+	await expect.poll( () => editorDetails.getAttribute( 'open' ) ).toBe(
+		editorInitialOpen
+	);
+
+	await savePost( page );
+	const postId =
+		( await getCurrentPostId( page ) ) ||
+		getPostIdFromEditorUrl( page.url() );
+	if ( ! postId ) {
+		throw new Error( 'Could not determine post ID from editor URL.' );
+	}
+
+	// 2) Frontend collapsible mode: summary click toggles visibility.
+	const frontendCollapsiblePage = await page.context().newPage();
+	await goToFrontendPost( frontendCollapsiblePage, resolvedBase, postId );
+	const frontendCollapsibleBlock = frontendCollapsiblePage
+		.locator( '.wp-block-common-wp-blocks-admonition' )
+		.first();
+	const frontendCollapsibleDetails = frontendCollapsibleBlock
+		.locator( 'details' )
+		.first();
+	const frontendCollapsibleSummary = frontendCollapsibleBlock
+		.locator( 'summary.admonition-header' )
+		.first();
+	const frontendCollapsibleContent = frontendCollapsibleBlock
+		.locator( '.admonition-content' )
+		.first();
+
+	await expect( frontendCollapsibleDetails ).toHaveCount( 1 );
+	await expect( frontendCollapsibleSummary ).toBeVisible( { timeout: 15000 } );
+	const frontendInitialOpen = await frontendCollapsibleDetails.getAttribute(
+		'open'
+	);
+
+	await frontendCollapsibleSummary.click();
+	await expect
+		.poll( () => frontendCollapsibleDetails.getAttribute( 'open' ) )
+		.not.toBe( frontendInitialOpen );
+
+	await frontendCollapsibleSummary.click();
+	await expect.poll( () =>
+		frontendCollapsibleDetails.getAttribute( 'open' )
+	).toBe( frontendInitialOpen );
+	await expect( frontendCollapsibleContent ).toBeVisible();
+	await frontendCollapsiblePage.close();
+
+	// 3) Editor non-collapsible mode: no <details>/<summary>, content always visible.
+	await admonitionBlock.locator( '.admonition-header' ).first().click();
+	await setEnableCollapsing( page, false );
+
+	await expect( admonitionBlock.locator( 'details' ) ).toHaveCount( 0 );
+	await expect( admonitionBlock.locator( 'summary' ) ).toHaveCount( 0 );
+	const staticEditorHeader = admonitionBlock
+		.locator( '.admonition-header' )
+		.first();
+	const staticEditorContent = admonitionBlock
+		.locator( '.admonition-content' )
+		.first();
+	await expect( staticEditorHeader ).toBeVisible();
+	await expect( staticEditorContent ).toBeVisible();
+
+	await savePost( page );
+
+	// 4) Frontend non-collapsible mode: static markup, always visible.
+	const frontendStaticPage = await page.context().newPage();
+	await goToFrontendPost( frontendStaticPage, resolvedBase, postId );
+	const frontendStaticBlock = frontendStaticPage
+		.locator( '.wp-block-common-wp-blocks-admonition' )
+		.first();
+	const staticFrontendHeader = frontendStaticBlock
+		.locator( '.admonition-header' )
+		.first();
+	const staticFrontendContent = frontendStaticBlock
+		.locator( '.admonition-content' )
+		.first();
+
+	await expect( frontendStaticBlock.locator( 'details' ) ).toHaveCount( 0 );
+	await expect( frontendStaticBlock.locator( 'summary' ) ).toHaveCount( 0 );
+	await expect( staticFrontendHeader ).toBeVisible( { timeout: 15000 } );
+	await expect( staticFrontendContent ).toBeVisible();
+	await frontendStaticPage.close();
 } );
