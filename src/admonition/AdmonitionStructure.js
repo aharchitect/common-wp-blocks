@@ -79,10 +79,7 @@ export default function AdmonitionStructure( {
 		// The <details> element
 		<details open={ isOpen }>
 			{ /* The <summary> element (header) */ }
-			<summary
-				{ ...iconAttribute }
-				className="admonition-header"
-			>
+			<summary { ...iconAttribute } className="admonition-header">
 				{ /* Custom/Default Icon */ }
 				{ iconElement }
 
