@@ -541,7 +541,9 @@ test( 'admonition collapsing modes work in editor and frontend', async ( {
 	await expect( bodyParagraph ).toBeVisible( { timeout: 15000 } );
 	await bodyParagraph.click();
 	await page.keyboard.press( 'ControlOrMeta+a' );
-	await page.keyboard.type( 'Collapsible mode and static mode should differ.' );
+	await page.keyboard.type(
+		'Collapsible mode and static mode should differ.'
+	);
 
 	await admonitionBlock.locator( '.admonition-header' ).first().click();
 
@@ -562,9 +564,9 @@ test( 'admonition collapsing modes work in editor and frontend', async ( {
 		.poll( () => editorDetails.getAttribute( 'open' ) )
 		.not.toBe( editorInitialOpen );
 	await editorSummary.click();
-	await expect.poll( () => editorDetails.getAttribute( 'open' ) ).toBe(
-		editorInitialOpen
-	);
+	await expect
+		.poll( () => editorDetails.getAttribute( 'open' ) )
+		.toBe( editorInitialOpen );
 
 	await savePost( page );
 	const postId =
@@ -591,10 +593,11 @@ test( 'admonition collapsing modes work in editor and frontend', async ( {
 		.first();
 
 	await expect( frontendCollapsibleDetails ).toHaveCount( 1 );
-	await expect( frontendCollapsibleSummary ).toBeVisible( { timeout: 15000 } );
-	const frontendInitialOpen = await frontendCollapsibleDetails.getAttribute(
-		'open'
-	);
+	await expect( frontendCollapsibleSummary ).toBeVisible( {
+		timeout: 15000,
+	} );
+	const frontendInitialOpen =
+		await frontendCollapsibleDetails.getAttribute( 'open' );
 
 	await frontendCollapsibleSummary.click();
 	await expect
@@ -602,9 +605,9 @@ test( 'admonition collapsing modes work in editor and frontend', async ( {
 		.not.toBe( frontendInitialOpen );
 
 	await frontendCollapsibleSummary.click();
-	await expect.poll( () =>
-		frontendCollapsibleDetails.getAttribute( 'open' )
-	).toBe( frontendInitialOpen );
+	await expect
+		.poll( () => frontendCollapsibleDetails.getAttribute( 'open' ) )
+		.toBe( frontendInitialOpen );
 	await expect( frontendCollapsibleContent ).toBeVisible();
 	await frontendCollapsiblePage.close();
 
@@ -643,4 +646,101 @@ test( 'admonition collapsing modes work in editor and frontend', async ( {
 	await expect( staticFrontendHeader ).toBeVisible( { timeout: 15000 } );
 	await expect( staticFrontendContent ).toBeVisible();
 	await frontendStaticPage.close();
+} );
+
+test( 'admonition starts collapsed when Start Expanded is off and reveals content on title click', async ( {
+	page,
+	baseURL,
+} ) => {
+	test.setTimeout( 90000 );
+	const resolvedBase =
+		baseURL || process.env.WP_BASE_URL || 'http://localhost:8000';
+
+	await loginToWordPress( page, resolvedBase, 'admin', 'pass' );
+	await dismissWelcomeGuideIfPresent( page );
+	await createPost(
+		page,
+		resolvedBase,
+		'Admonition Start Collapsed E2E',
+		'Base paragraph for insertion.'
+	);
+	await dismissWelcomeGuideIfPresent( page );
+
+	const editor = await getEditorContext( page );
+	await insertAdmonitionBlock( page, editor );
+
+	const admonitionBlock = editor
+		.locator( '.wp-block-common-wp-blocks-admonition' )
+		.last();
+	await admonitionBlock.waitFor( { state: 'visible', timeout: 15000 } );
+
+	const bodyParagraph = admonitionBlock
+		.locator( '.admonition-content p[contenteditable="true"]' )
+		.first();
+	await expect( bodyParagraph ).toBeVisible( { timeout: 15000 } );
+	await bodyParagraph.click();
+	await page.keyboard.press( 'ControlOrMeta+a' );
+	await page.keyboard.type(
+		'This paragraph should exist in DOM but start hidden when collapsed.'
+	);
+
+	await admonitionBlock.locator( '.admonition-header' ).first().click();
+	await setEnableCollapsing( page, true );
+	await setStartExpanded( page, false );
+
+	const editorDetails = admonitionBlock.locator( 'details' ).first();
+	const editorSummary = admonitionBlock
+		.locator( 'summary.admonition-header' )
+		.first();
+	const editorParagraph = admonitionBlock
+		.locator( '.admonition-content p' )
+		.first();
+
+	await expect( editorDetails ).toHaveCount( 1 );
+	await expect.poll( () => editorDetails.getAttribute( 'open' ) ).toBeNull();
+	await expect( editorParagraph ).toHaveCount( 1 );
+	await expect( editorParagraph ).not.toBeVisible();
+
+	await editorSummary.click();
+	await expect
+		.poll( () => editorDetails.getAttribute( 'open' ) )
+		.not.toBeNull();
+	await expect( editorParagraph ).toBeVisible();
+
+	await savePost( page );
+	const postId =
+		( await getCurrentPostId( page ) ) ||
+		getPostIdFromEditorUrl( page.url() );
+	if ( ! postId ) {
+		throw new Error( 'Could not determine post ID from editor URL.' );
+	}
+
+	const frontendPage = await page.context().newPage();
+	await goToFrontendPost( frontendPage, resolvedBase, postId );
+
+	const frontendBlock = frontendPage
+		.locator( '.wp-block-common-wp-blocks-admonition' )
+		.first();
+	const frontendDetails = frontendBlock.locator( 'details' ).first();
+	const frontendSummary = frontendBlock
+		.locator( 'summary.admonition-header' )
+		.first();
+	const frontendParagraph = frontendBlock
+		.locator( '.admonition-content p' )
+		.first();
+
+	await expect( frontendDetails ).toHaveCount( 1 );
+	await expect
+		.poll( () => frontendDetails.getAttribute( 'open' ) )
+		.toBeNull();
+	await expect( frontendParagraph ).toHaveCount( 1 );
+	await expect( frontendParagraph ).not.toBeVisible();
+
+	await frontendSummary.click();
+	await expect
+		.poll( () => frontendDetails.getAttribute( 'open' ) )
+		.not.toBeNull();
+	await expect( frontendParagraph ).toBeVisible();
+
+	await frontendPage.close();
 } );
