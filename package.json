@@ -20,9 +20,16 @@
 		"start": "wp-scripts start --webpack-copy-php --output-path=build/admonition src/admonition/index.js"
 	},
 	"devDependencies": {
+		"@eslint/css": "^0.14.1",
+		"@eslint/js": "^10.0.1",
+		"@eslint/json": "^1.0.1",
+		"@eslint/markdown": "^7.5.1",
 		"@playwright/test": "^1.57.0",
 		"@wordpress/e2e-test-utils-playwright": "^1.36.0",
 		"@wordpress/scripts": "^31.4.0",
+		"eslint": "^8.57.1",
+		"eslint-plugin-react": "^7.37.5",
+		"globals": "^17.3.0",
 		"jest-transform-stub": "^2.0.0",
 		"playwright": "^1.57.0",
 		"postcss-scss": "^4.0.9"
