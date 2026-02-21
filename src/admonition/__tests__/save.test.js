@@ -51,6 +51,10 @@ describe( 'Save', () => {
 			customIconData: '',
 			isCollapsible: false,
 			isInitiallyExpanded: true,
+			enableCustomBorder: false,
+			customBorderColor: '',
+			customBorderWidth: 5,
+			customBorderRadius: 0,
 		};
 	} );
 
@@ -109,6 +113,22 @@ describe( 'Save', () => {
 		expect( iconAttrs ).toEqual( {
 			'data-has-custom-icon': 'true',
 		} );
+	} );
+
+	it( 'should generate border CSS variables when custom border styling is enabled', () => {
+		defaultAttributes.enableCustomBorder = true;
+		defaultAttributes.customBorderColor = '#123456';
+		defaultAttributes.customBorderWidth = 9;
+		defaultAttributes.customBorderRadius = 7;
+
+		const { container } = render(
+			save( { attributes: defaultAttributes } )
+		);
+
+		const wrapperDiv = container.firstChild;
+		expect( wrapperDiv ).toHaveStyle( `--admonition-accent-left-color: #123456` );
+		expect( wrapperDiv ).toHaveStyle( `--admonition-accent-left-width: 9px` );
+		expect( wrapperDiv ).toHaveStyle( `--admonition-corner-radius: 7px` );
 	} );
 
 	// --- TEST 3: Collapsible State Logic ---

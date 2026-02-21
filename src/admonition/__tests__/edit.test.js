@@ -40,6 +40,9 @@ jest.mock( '@wordpress/block-editor', () => ( {
 	InspectorControls: ( { children } ) => (
 		<div data-testid="inspector-controls">{ children }</div>
 	),
+	__experimentalPanelColorGradientSettings: ( { children } ) => (
+		<div data-testid="panel-color-gradient-settings">{ children }</div>
+	),
 } ) );
 
 jest.mock( '@wordpress/components', () => ( {
@@ -70,6 +73,24 @@ jest.mock( '@wordpress/components', () => ( {
 	PanelBody: ( { children } ) => (
 		<div data-testid="panel-body">{ children }</div>
 	),
+	BaseControl: ( { children, label } ) => (
+		<div data-testid={ `base-control-${ label }` }>{ children }</div>
+	),
+	ColorPalette: ( { value, onChange } ) => (
+		<input
+			data-testid="border-color-input"
+			value={ value || '' }
+			onChange={ ( e ) => onChange( e.target.value ) }
+		/>
+	),
+	RangeControl: ( { label, value, onChange } ) => (
+		<input
+			data-testid={ `range-${ label }` }
+			type="number"
+			value={ value }
+			onChange={ ( e ) => onChange( Number( e.target.value ) ) }
+		/>
+	),
 	TextareaControl: ( { value, onChange } ) => (
 		<textarea
 			data-testid="custom-icon-input"
@@ -96,6 +117,10 @@ describe( 'Edit', () => {
 			customIconData: '',
 			isCollapsible: false,
 			isInitiallyExpanded: true,
+			enableCustomBorder: false,
+			customBorderColor: '',
+			customBorderWidth: 5,
+			customBorderRadius: 0,
 		};
 		mockSetAttributes = jest.fn();
 	} );
@@ -155,6 +180,26 @@ describe( 'Edit', () => {
 		expect( blockWrapper?.getAttribute( 'style' ) || '' ).toContain(
 			'--admonition-icon-mask'
 		);
+	} );
+
+	it( 'should apply custom border CSS variables when custom border styling is enabled', () => {
+		mockAttributes.enableCustomBorder = true;
+		mockAttributes.customBorderColor = '#123456';
+		mockAttributes.customBorderWidth = 8;
+		mockAttributes.customBorderRadius = 6;
+
+		const { container } = render(
+			<Edit
+				attributes={ mockAttributes }
+				setAttributes={ mockSetAttributes }
+			/>
+		);
+
+		const blockWrapper = container.querySelector( '.admonition-type-note' );
+		const style = blockWrapper?.getAttribute( 'style' ) || '';
+		expect( style ).toContain( '--admonition-accent-left-color: #123456' );
+		expect( style ).toContain( '--admonition-accent-left-width: 8px' );
+		expect( style ).toContain( '--admonition-corner-radius: 6px' );
 	} );
 
 	// --- TEST 3: SelectControl Attribute Change and Reset Logic ---

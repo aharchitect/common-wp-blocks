@@ -26,15 +26,10 @@
 	"supports": {
 		"html": false,
 		"color": {
-			"text": false,
+			"text": true,
 			"background": true,
 			"gradients": false,
-			"link": false,
-			"__experimentalBorder": {
-				"color": true,
-				"style": false,
-				"width": false
-			}
+			"link": false
 		},
 		"typography": {
 			"fontSize": true
@@ -62,6 +57,22 @@
 		"isInitiallyExpanded": {
 			"type": "boolean",
 			"default": true
+		},
+		"enableCustomBorder": {
+			"type": "boolean",
+			"default": false
+		},
+		"customBorderColor": {
+			"type": "string",
+			"default": ""
+		},
+		"customBorderWidth": {
+			"type": "number",
+			"default": 5
+		},
+		"customBorderRadius": {
+			"type": "number",
+			"default": 0
 		}
 	},
 	"textdomain": "common-wp-blocks",

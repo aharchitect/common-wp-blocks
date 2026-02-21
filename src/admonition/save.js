@@ -20,16 +20,36 @@ import AdmonitionStructure from './AdmonitionStructure';
  * @return {Element} Element to render.
  */
 export default function save( { attributes } ) {
-	const { type, title, customIconData, isCollapsible, isInitiallyExpanded } =
-		attributes;
+	const {
+		type,
+		title,
+		customIconData,
+		isCollapsible,
+		isInitiallyExpanded,
+		enableCustomBorder,
+		customBorderColor,
+		customBorderWidth,
+		customBorderRadius,
+	} = attributes;
 
 	// Apply custom styling for icon masking directly to the block wrapper via blockProps
 	// The CSS variable is used for custom icons, overriding the default.
-	const blockStyle = customIconData
-		? {
-				'--admonition-icon-mask': `url('${ customIconData }')`,
-		  }
-		: {};
+	const blockStyle = {};
+	if ( customIconData ) {
+		blockStyle[ '--admonition-icon-mask' ] = `url('${ customIconData }')`;
+	}
+	if ( enableCustomBorder ) {
+		if ( customBorderColor ) {
+			blockStyle[ '--admonition-accent-left-color' ] = customBorderColor;
+		}
+		if ( typeof customBorderWidth === 'number' ) {
+			blockStyle[ '--admonition-accent-left-width' ] = `${ customBorderWidth }px`;
+		}
+		if ( typeof customBorderRadius === 'number' ) {
+			blockStyle[ '--admonition-corner-radius' ] =
+				`${ customBorderRadius }px`;
+		}
+	}
 
 	const blockProps = useBlockProps.save( {
 		className: `admonition-type-${ type }`,

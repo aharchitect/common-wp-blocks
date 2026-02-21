@@ -9,13 +9,18 @@
  *
  * @see https://developer.wordpress.org/block-editor/reference-guides/packages/packages-block-editor/#useblockprops
  */
-import { useBlockProps, InspectorControls } from '@wordpress/block-editor';
+import {
+	useBlockProps,
+	InspectorControls,
+	__experimentalPanelColorGradientSettings as PanelColorGradientSettings,
+} from '@wordpress/block-editor';
 
 import {
 	SelectControl,
 	PanelBody,
 	ToggleControl,
 	TextareaControl,
+	RangeControl,
 } from '@wordpress/components';
 
 /* eslint-disable jsdoc/check-line-alignment */
@@ -44,19 +49,39 @@ import AdmonitionStructure from './AdmonitionStructure';
  * @return {Element} Element to render.
  */
 export default function Edit( { attributes, setAttributes } ) {
-	const { type, title, customIconData, isCollapsible, isInitiallyExpanded } =
-		attributes;
+	const {
+		type,
+		title,
+		customIconData,
+		isCollapsible,
+		isInitiallyExpanded,
+		enableCustomBorder,
+		customBorderColor,
+		customBorderWidth,
+		customBorderRadius,
+	} = attributes;
 
 	// Determine the 'open' state for the editor's preview
 	// If not collapsible OR if collapsible AND initially expanded
 	const editorOpenState = ! isCollapsible || isInitiallyExpanded;
 
 	// Use the same icon-mask pipeline as save(): CSS variable on wrapper + data flags on summary.
-	const blockStyle = customIconData
-		? {
-				'--admonition-icon-mask': `url('${ customIconData }')`,
-		  }
-		: {};
+	const blockStyle = {};
+	if ( customIconData ) {
+		blockStyle[ '--admonition-icon-mask' ] = `url('${ customIconData }')`;
+	}
+	if ( enableCustomBorder ) {
+		if ( customBorderColor ) {
+			blockStyle[ '--admonition-accent-left-color' ] = customBorderColor;
+		}
+		if ( typeof customBorderWidth === 'number' ) {
+			blockStyle[ '--admonition-accent-left-width' ] = `${ customBorderWidth }px`;
+		}
+		if ( typeof customBorderRadius === 'number' ) {
+			blockStyle[ '--admonition-corner-radius' ] =
+				`${ customBorderRadius }px`;
+		}
+	}
 
 	// blockProps manages classes and inline styles (for color controls)
 	const blockProps = useBlockProps( {
@@ -135,6 +160,70 @@ export default function Edit( { attributes, setAttributes } ) {
 					/>
 				</PanelBody>
 				{ /* Color controls will automatically appear here because of block.json supports */ }
+			</InspectorControls>
+			<InspectorControls group="styles">
+				<PanelBody title="Border">
+					<ToggleControl
+						label="Enable custom border styling"
+						help={
+							enableCustomBorder
+								? 'Use the settings below to override default type border styles.'
+								: 'Use default border styles from the selected admonition type.'
+						}
+						checked={ enableCustomBorder }
+						onChange={ ( value ) =>
+							setAttributes( { enableCustomBorder: value } )
+						}
+					/>
+					{ enableCustomBorder && (
+						<>
+							<PanelColorGradientSettings
+								title="Border Color"
+								settings={ [
+									{
+										label: 'Border',
+										colorValue: customBorderColor,
+										onColorChange: ( color ) =>
+											setAttributes( {
+												customBorderColor: color || '',
+											} ),
+										gradients: [],
+										disableCustomGradients: true,
+										clearable: true,
+									},
+								] }
+							/>
+							<RangeControl
+								label="Border Thickness (px)"
+								value={ customBorderWidth }
+								onChange={ ( value ) =>
+									setAttributes( {
+										customBorderWidth:
+											typeof value === 'number'
+												? value
+												: 5,
+									} )
+								}
+								min={ 1 }
+								max={ 20 }
+							/>
+							<RangeControl
+								label="Border Radius (px)"
+								value={ customBorderRadius }
+								onChange={ ( value ) =>
+									setAttributes( {
+										customBorderRadius:
+											typeof value === 'number'
+												? value
+												: 0,
+									} )
+								}
+								min={ 0 }
+								max={ 40 }
+							/>
+						</>
+					) }
+				</PanelBody>
 			</InspectorControls>
 
 			{ /* 2. Block Content (Editor View) */ }
