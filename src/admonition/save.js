@@ -27,6 +27,9 @@ export default function save( { attributes } ) {
 		isCollapsible,
 		isInitiallyExpanded,
 		enableCustomBorder,
+		customBlockBgColor,
+		customHeaderBgColor,
+		customHeaderTextColor,
 		customBorderColor,
 		customBorderWidth,
 		customBorderRadius,
@@ -37,6 +40,16 @@ export default function save( { attributes } ) {
 	const blockStyle = {};
 	if ( customIconData ) {
 		blockStyle[ '--admonition-icon-mask' ] = `url('${ customIconData }')`;
+	}
+	if ( customBlockBgColor ) {
+		blockStyle[ '--admonition-block-bg-custom' ] = customBlockBgColor;
+	}
+	if ( customHeaderBgColor ) {
+		blockStyle[ '--admonition-header-bg-custom' ] = customHeaderBgColor;
+	}
+	if ( customHeaderTextColor ) {
+		blockStyle[ '--admonition-header-text-custom' ] =
+			customHeaderTextColor;
 	}
 	if ( enableCustomBorder ) {
 		if ( customBorderColor ) {

@@ -51,7 +51,10 @@ $admonition-config: (
 /* Base class for the entire block (div) */
 .wp-block-common-wp-blocks-admonition {
     /* Fallback block background color */
-    background-color: var(--wp--style--color--background, #ffffff);
+    background-color: var(
+        --admonition-block-bg-custom,
+        var(--admonition-block-bg-color, #ffffff)
+    );
     padding: 0;
 
     /* --- ICON/HEADER STYLES FOR BOTH <DETAILS> AND NON-COLLAPSIBLE --- */
@@ -132,7 +135,10 @@ $admonition-config: (
 
         summary {
             /* Fallback header background color */
-            background-color: var(--wp--style--border--color, #e6f3ff);
+            background-color: var(
+                --admonition-header-bg-custom,
+                var(--admonition-header-color, #e6f3ff)
+            );
             list-style: none;
             list-style-type: none;
             cursor: pointer;
@@ -194,7 +200,10 @@ $admonition-config: (
         overflow: hidden;
 
         .admonition-header {
-            background-color: var(--wp--style--border--color, #e6f3ff);
+            background-color: var(
+                --admonition-header-bg-custom,
+                var(--admonition-header-color, #e6f3ff)
+            );
             padding: 0.5em 1em;
             pointer-events: none; /* Disable interaction on the header */
             cursor: default;
@@ -224,7 +233,10 @@ $admonition-config: (
 
             summary.admonition-header {
                 background-color: var(--admonition-header-color);
-                color: var(--admonition-primary-color);
+                color: var(
+                    --admonition-header-text-color,
+                    var(--admonition-primary-color)
+                );
                 padding: 0.5em 1em;
                 pointer-events: none;
                 cursor: default;
@@ -266,8 +278,18 @@ $admonition-config: (
 
         /* Define a custom property on the block root that can be overridden by user styles */
         --admonition-primary-color: #{$sass-primary};
-        --admonition-header-color: #{$sass-header-bg};
-        --admonition-block-bg-color: #{$sass-block-bg};
+        --admonition-header-text-color: var(
+            --admonition-header-text-custom,
+            #{$sass-primary}
+        );
+        --admonition-header-color: var(
+            --admonition-header-bg-custom,
+            #{$sass-header-bg}
+        );
+        --admonition-block-bg-color: var(
+            --admonition-block-bg-custom,
+            #{$sass-block-bg}
+        );
         --admonition-accent-left-color: #{$sass-primary};
         --admonition-default-icon: url('#{$sass-icon}');
 
@@ -294,7 +316,7 @@ $admonition-config: (
             summary {
                 /* The key: Apply the background and text color using the variable defined above. */
                 background-color: var(--admonition-header-color);
-                color: var(--admonition-primary-color);
+                color: var(--admonition-header-text-color);
             }
         }
 
@@ -307,7 +329,7 @@ $admonition-config: (
 
             .admonition-header {
                 background-color: var(--admonition-header-color);
-                color: var(--admonition-primary-color);
+                color: var(--admonition-header-text-color);
             }
         }
     }

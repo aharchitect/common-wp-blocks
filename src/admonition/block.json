@@ -25,12 +25,6 @@
 	},
 	"supports": {
 		"html": false,
-		"color": {
-			"text": true,
-			"background": true,
-			"gradients": false,
-			"link": false
-		},
 		"typography": {
 			"fontSize": true
 		}
@@ -61,6 +55,18 @@
 		"enableCustomBorder": {
 			"type": "boolean",
 			"default": false
+		},
+		"customBlockBgColor": {
+			"type": "string",
+			"default": ""
+		},
+		"customHeaderBgColor": {
+			"type": "string",
+			"default": ""
+		},
+		"customHeaderTextColor": {
+			"type": "string",
+			"default": ""
 		},
 		"customBorderColor": {
 			"type": "string",

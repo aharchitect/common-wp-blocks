@@ -56,6 +56,9 @@ export default function Edit( { attributes, setAttributes } ) {
 		isCollapsible,
 		isInitiallyExpanded,
 		enableCustomBorder,
+		customBlockBgColor,
+		customHeaderBgColor,
+		customHeaderTextColor,
 		customBorderColor,
 		customBorderWidth,
 		customBorderRadius,
@@ -69,6 +72,16 @@ export default function Edit( { attributes, setAttributes } ) {
 	const blockStyle = {};
 	if ( customIconData ) {
 		blockStyle[ '--admonition-icon-mask' ] = `url('${ customIconData }')`;
+	}
+	if ( customBlockBgColor ) {
+		blockStyle[ '--admonition-block-bg-custom' ] = customBlockBgColor;
+	}
+	if ( customHeaderBgColor ) {
+		blockStyle[ '--admonition-header-bg-custom' ] = customHeaderBgColor;
+	}
+	if ( customHeaderTextColor ) {
+		blockStyle[ '--admonition-header-text-custom' ] =
+			customHeaderTextColor;
 	}
 	if ( enableCustomBorder ) {
 		if ( customBorderColor ) {
@@ -93,6 +106,41 @@ export default function Edit( { attributes, setAttributes } ) {
 	const iconAttribute = customIconData
 		? { 'data-has-custom-icon': 'true' }
 		: { 'data-has-default-icon': 'true' };
+
+	const applyBorderColor = ( color ) => {
+		const newColor = color || '';
+		const nextAttributes = { customBorderColor: newColor };
+
+		if ( newColor ) {
+			nextAttributes.enableCustomBorder = true;
+		}
+
+		// Offer a one-click sync to keep header and border visually aligned.
+		if (
+			newColor &&
+			newColor !== customBorderColor &&
+			! customHeaderBgColor
+		) {
+			let shouldSyncHeader = false;
+			if (
+				typeof window !== 'undefined' &&
+				typeof window.confirm === 'function'
+			) {
+				try {
+					shouldSyncHeader = window.confirm(
+						'Apply the same color to the header background?'
+					);
+				} catch ( error ) {
+					shouldSyncHeader = false;
+				}
+			}
+			if ( shouldSyncHeader ) {
+				nextAttributes.customHeaderBgColor = newColor;
+			}
+		}
+
+		setAttributes( nextAttributes );
+	};
 
 	return (
 		<>
@@ -162,13 +210,59 @@ export default function Edit( { attributes, setAttributes } ) {
 				{ /* Color controls will automatically appear here because of block.json supports */ }
 			</InspectorControls>
 			<InspectorControls group="styles">
-				<PanelBody title="Border">
+				<PanelBody title="Colors & Border">
+					<PanelColorGradientSettings
+						title="Colors"
+						settings={ [
+							{
+								label: 'Block Background',
+								colorValue: customBlockBgColor,
+								onColorChange: ( color ) =>
+									setAttributes( {
+										customBlockBgColor: color || '',
+									} ),
+								gradients: [],
+								disableCustomGradients: true,
+								clearable: true,
+							},
+							{
+								label: 'Header Background',
+								colorValue: customHeaderBgColor,
+								onColorChange: ( color ) =>
+									setAttributes( {
+										customHeaderBgColor: color || '',
+									} ),
+								gradients: [],
+								disableCustomGradients: true,
+								clearable: true,
+							},
+							{
+								label: 'Header Text',
+								colorValue: customHeaderTextColor,
+								onColorChange: ( color ) =>
+									setAttributes( {
+										customHeaderTextColor: color || '',
+									} ),
+								gradients: [],
+								disableCustomGradients: true,
+								clearable: true,
+							},
+							{
+								label: 'Border',
+								colorValue: customBorderColor,
+								onColorChange: applyBorderColor,
+								gradients: [],
+								disableCustomGradients: true,
+								clearable: true,
+							},
+						] }
+					/>
 					<ToggleControl
 						label="Enable custom border styling"
 						help={
 							enableCustomBorder
-								? 'Use the settings below to override default type border styles.'
-								: 'Use default border styles from the selected admonition type.'
+								? 'Use custom border color, thickness, and radius.'
+								: 'Use border defaults from the selected admonition type.'
 						}
 						checked={ enableCustomBorder }
 						onChange={ ( value ) =>
@@ -177,22 +271,6 @@ export default function Edit( { attributes, setAttributes } ) {
 					/>
 					{ enableCustomBorder && (
 						<>
-							<PanelColorGradientSettings
-								title="Border Color"
-								settings={ [
-									{
-										label: 'Border',
-										colorValue: customBorderColor,
-										onColorChange: ( color ) =>
-											setAttributes( {
-												customBorderColor: color || '',
-											} ),
-										gradients: [],
-										disableCustomGradients: true,
-										clearable: true,
-									},
-								] }
-							/>
 							<RangeControl
 								label="Border Thickness (px)"
 								value={ customBorderWidth }
