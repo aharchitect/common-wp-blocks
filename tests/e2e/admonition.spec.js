@@ -262,7 +262,7 @@ test( 'create and render admonition block', async ( { page, baseURL } ) => {
 	const resolvedBase = resolveBaseUrl( baseURL );
 	logger.info( { baseURL }, 'Playwright baseURL' );
 	logger.info( { resolvedBase }, 'Resolved base URL' );
-	const admonitionTitleText = 'E2E Note Title';
+
 	const admonitionContentText = 'This is an admonition created by E2E test.';
 	const { editor, admonitionBlock } = await prepareAdmonitionEditor(
 		page,
