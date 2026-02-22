@@ -1,8 +1,6 @@
 import { RichText, InnerBlocks } from '@wordpress/block-editor';
 import { Icon } from '@wordpress/components'; // Needed for the editor's toggle icon
 
-/* eslint-disable jsdoc/check-line-alignment */
-
 /**
  * Reusable component for the Admonition block's core HTML structure.
  * This component handles either a collapsible <details>/<summary> structure

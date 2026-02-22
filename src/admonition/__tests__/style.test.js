@@ -10,7 +10,7 @@ describe( 'Admonition style icon mask wiring', () => {
 			/\$sass-icon:\s*map\.get\(\$config,\s*icon\);/
 		);
 		expect( style ).toMatch(
-			/--admonition-default-icon:\s*url\('\#\{\$sass-icon\}'\);/
+			/--admonition-default-icon:\s*url\('#\{\$sass-icon\}'\);/
 		);
 		expect( style ).toMatch(
 			/mask-image:\s*var\(--admonition-default-icon\);/

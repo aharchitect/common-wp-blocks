@@ -23,8 +23,6 @@ import {
 	RangeControl,
 } from '@wordpress/components';
 
-/* eslint-disable jsdoc/check-line-alignment */
-
 /**
  * Lets webpack process CSS, SASS or SCSS files referenced in JavaScript files.
  * Those files can contain any CSS code that gets applied to the editor.
@@ -127,15 +125,15 @@ export default function Edit( { attributes, setAttributes } ) {
 			if (
 				typeof window !== 'undefined' &&
 				typeof window.confirm === 'function'
-			) {
-				try {
-					shouldSyncHeader = window.confirm(
-						'Apply the same color to the header background?'
-					);
-				} catch ( error ) {
-					shouldSyncHeader = false;
+				) {
+					try {
+						shouldSyncHeader = window.confirm(
+							'Apply the same color to the header background?'
+						);
+					} catch {
+						shouldSyncHeader = false;
+					}
 				}
-			}
 			if ( shouldSyncHeader ) {
 				nextAttributes.customHeaderBgColor = newColor;
 			}
