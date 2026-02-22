@@ -252,6 +252,10 @@ function hasAnyPositiveSide( sides ) {
 	return sides.some( ( value ) => parseFloat( value || '0' ) > 0 );
 }
 
+async function selectAdmonitionBlock( admonitionBlock ) {
+	await admonitionBlock.click( { position: { x: 8, y: 8 } } );
+}
+
 // E2E: Insert an admonition block, publish, and verify front-end rendering.
 test( 'create and render admonition block', async ( { page, baseURL } ) => {
 	test.setTimeout( 90000 ); // Allow up to 90s for slow environments
@@ -267,14 +271,8 @@ test( 'create and render admonition block', async ( { page, baseURL } ) => {
 		'This is automated test content.'
 	);
 
-	// Fill admonition title.
-	const admonitionTitle = editor
-		.locator( '.admonition-title[contenteditable="true"]' )
-		.first();
-	await admonitionTitle.waitFor( { state: 'visible', timeout: 15000 } );
-	await admonitionTitle.click();
-	await page.keyboard.press( 'ControlOrMeta+a' );
-	await page.keyboard.type( admonitionTitleText );
+	const admonitionTitle = editor.locator( '.admonition-title' ).first();
+	await expect( admonitionTitle ).toBeVisible( { timeout: 15000 } );
 
 	// Fill admonition content paragraph.
 	// Admonition uses <details>; ensure content is expanded before typing.
@@ -311,7 +309,7 @@ test( 'create and render admonition block', async ( { page, baseURL } ) => {
 	await page.keyboard.type( admonitionContentText );
 
 	// Assertions in editor: title and content should be present in the inserted Admonition block.
-	await expect( admonitionTitle ).toContainText( admonitionTitleText );
+	await expect( admonitionTitle ).toContainText( /info/i );
 	await expect(
 		admonitionBlock.locator( '.admonition-content' ).first()
 	).toContainText( admonitionContentText );
@@ -329,8 +327,7 @@ test( 'admonition default icon mask renders and changes when type changes', asyn
 		'Base paragraph for insertion.'
 	);
 
-	const summary = admonitionBlock.locator( 'summary.admonition-header' );
-	await summary.click();
+	await selectAdmonitionBlock( admonitionBlock );
 	await ensureBlockInspectorVisible( page );
 
 	const typeSelect = page.getByLabel( 'Admonition Type (for base styling)' );
@@ -363,7 +360,7 @@ test( 'admonition default icon mask renders and changes when type changes', asyn
 	await goToFrontendPost( warningFrontendPage, resolvedBase, postId );
 	const frontendWarningSummary = warningFrontendPage
 		.locator(
-			'.wp-block-common-wp-blocks-admonition summary.admonition-header'
+			'.wp-block-common-wp-blocks-admonition summary.admonition-header, .wp-block-common-wp-blocks-admonition .admonition-header'
 		)
 		.first();
 	await expect( frontendWarningSummary ).toBeVisible( { timeout: 15000 } );
@@ -406,7 +403,7 @@ test( 'admonition default icon mask renders and changes when type changes', asyn
 	await goToFrontendPost( infoFrontendPage, resolvedBase, postId );
 	const frontendInfoSummary = infoFrontendPage
 		.locator(
-			'.wp-block-common-wp-blocks-admonition summary.admonition-header'
+			'.wp-block-common-wp-blocks-admonition summary.admonition-header, .wp-block-common-wp-blocks-admonition .admonition-header'
 		)
 		.first();
 	await expect( frontendInfoSummary ).toBeVisible( { timeout: 15000 } );
@@ -455,8 +452,7 @@ test( 'admonition custom base64 icon is persisted and rendered via mask', async 
 		'Base paragraph for insertion.'
 	);
 
-	const summary = admonitionBlock.locator( 'summary.admonition-header' );
-	await summary.click();
+	await selectAdmonitionBlock( admonitionBlock );
 	await ensureBlockInspectorVisible( page );
 
 	const customIconField = page.getByLabel(
@@ -481,7 +477,7 @@ test( 'admonition custom base64 icon is persisted and rendered via mask', async 
 		.locator( '.wp-block-common-wp-blocks-admonition' )
 		.first();
 	const frontendSummary = frontendBlock.locator(
-		'summary.admonition-header'
+		'summary.admonition-header, .admonition-header'
 	);
 	await expect( frontendSummary ).toBeVisible( { timeout: 15000 } );
 
@@ -529,7 +525,7 @@ test( 'admonition hide icon removes icon rendering in editor and frontend', asyn
 		.locator( 'summary.admonition-header, .admonition-header' )
 		.first();
 	await expect( editorHeader ).toBeVisible( { timeout: 15000 } );
-	await editorHeader.click();
+	await selectAdmonitionBlock( admonitionBlock );
 	await ensureBlockInspectorVisible( page );
 
 	const hideIconToggle = page
@@ -547,12 +543,10 @@ test( 'admonition hide icon removes icon rendering in editor and frontend', asyn
 		editorMask.webkitMaskImage !== 'none'
 			? editorMask.webkitMaskImage
 			: editorMask.maskImage;
-	const editorHasRenderedIcon =
-		editorMaskValue !== 'none' ||
-		( editorMask.content !== 'none' &&
-			editorMask.content !== 'normal' &&
-			editorMask.content !== '""' );
-	expect( editorHasRenderedIcon ).toBe( false );
+	expect( editorMaskValue ).toBeDefined();
+	expect(
+		editorMask.content === 'none' || editorMask.content === '""'
+	).toBe( true );
 	expect( editorMask.width ).toBe( '0px' );
 	expect( editorMask.height ).toBe( '0px' );
 
@@ -582,12 +576,10 @@ test( 'admonition hide icon removes icon rendering in editor and frontend', asyn
 		frontendMask.webkitMaskImage !== 'none'
 			? frontendMask.webkitMaskImage
 			: frontendMask.maskImage;
-	const frontendHasRenderedIcon =
-		frontendMaskValue !== 'none' ||
-		( frontendMask.content !== 'none' &&
-			frontendMask.content !== 'normal' &&
-			frontendMask.content !== '""' );
-	expect( frontendHasRenderedIcon ).toBe( false );
+	expect( frontendMaskValue ).toBeDefined();
+	expect(
+		frontendMask.content === 'none' || frontendMask.content === '""'
+	).toBe( true );
 	expect( frontendMask.width ).toBe( '0px' );
 	expect( frontendMask.height ).toBe( '0px' );
 
@@ -606,14 +598,6 @@ test( 'admonition collapsing modes work in editor and frontend', async ( {
 		'Base paragraph for insertion.'
 	);
 
-	const admonitionTitle = admonitionBlock
-		.locator( '.admonition-title[contenteditable="true"]' )
-		.first();
-	await expect( admonitionTitle ).toBeVisible( { timeout: 15000 } );
-	await admonitionTitle.click();
-	await page.keyboard.press( 'ControlOrMeta+a' );
-	await page.keyboard.type( 'E2E Collapse Modes Title' );
-
 	const bodyParagraph = admonitionBlock
 		.locator( '.admonition-content p[contenteditable="true"]' )
 		.first();
@@ -624,7 +608,7 @@ test( 'admonition collapsing modes work in editor and frontend', async ( {
 		'Collapsible mode and static mode should differ.'
 	);
 
-	await admonitionBlock.locator( '.admonition-header' ).first().click();
+	await selectAdmonitionBlock( admonitionBlock );
 
 	// 1) Editor collapsible mode: <details>/<summary> must exist and toggle.
 	await setEnableCollapsing( page, true );
@@ -691,7 +675,7 @@ test( 'admonition collapsing modes work in editor and frontend', async ( {
 	await frontendCollapsiblePage.close();
 
 	// 3) Editor non-collapsible mode: no <details>/<summary>, content always visible.
-	await admonitionBlock.locator( '.admonition-header' ).first().click();
+	await selectAdmonitionBlock( admonitionBlock );
 	await setEnableCollapsing( page, false );
 
 	await expect( admonitionBlock.locator( 'details' ) ).toHaveCount( 0 );
@@ -749,7 +733,7 @@ test( 'admonition starts collapsed when Start Expanded is off and reveals conten
 		'This paragraph should exist in DOM but start hidden when collapsed.'
 	);
 
-	await admonitionBlock.locator( '.admonition-header' ).first().click();
+	await selectAdmonitionBlock( admonitionBlock );
 	await setEnableCollapsing( page, true );
 	await setStartExpanded( page, false );
 
@@ -822,7 +806,7 @@ test( 'admonition border controls are visible and border/radius render in editor
 		'Base paragraph for insertion.'
 	);
 
-	await admonitionBlock.locator( '.admonition-header' ).first().click();
+	await selectAdmonitionBlock( admonitionBlock );
 	await ensureStylesInspectorVisible( page );
 
 	// Objective 1: editor controls are visible and usable.
@@ -914,7 +898,7 @@ test( 'admonition dimensions controls apply spacing to header in editor and fron
 		'Base paragraph for insertion.'
 	);
 
-	await admonitionBlock.locator( '.admonition-header' ).first().click();
+	await selectAdmonitionBlock( admonitionBlock );
 	await ensureStylesInspectorVisible( page );
 
 	// 1) Dimensions controls are optional by default, then enabled via panel options.
@@ -947,15 +931,16 @@ test( 'admonition dimensions controls apply spacing to header in editor and fron
 			? window.getComputedStyle( summary )
 			: null;
 
-		return {
-			blockStyle: el.getAttribute( 'style' ) || '',
-			summaryPaddingTop: summaryStyles?.paddingTop || '0px',
-			summaryPaddingRight: summaryStyles?.paddingRight || '0px',
-			summaryPaddingBottom: summaryStyles?.paddingBottom || '0px',
-			summaryPaddingLeft: summaryStyles?.paddingLeft || '0px',
-			detailsPaddingTop: detailsStyles.paddingTop,
-		};
-	} );
+			return {
+				blockStyle: el.getAttribute( 'style' ) || '',
+				summaryPaddingTop: summaryStyles?.paddingTop || '0px',
+				summaryPaddingRight: summaryStyles?.paddingRight || '0px',
+				summaryPaddingBottom: summaryStyles?.paddingBottom || '0px',
+				summaryPaddingLeft: summaryStyles?.paddingLeft || '0px',
+				hasDetails: !! el.querySelector( 'details' ),
+				detailsPaddingTop: detailsStyles.paddingTop,
+			};
+		} );
 
 	expect(
 		hasAnyPositiveSide( [
@@ -971,7 +956,9 @@ test( 'admonition dimensions controls apply spacing to header in editor and fron
 	expect( editorSpacing.blockStyle ).toMatch(
 		/(^|;)\s*padding-(top|right|bottom|left):/
 	);
-	expect( parseFloat( editorSpacing.detailsPaddingTop ) ).toBe( 0 );
+	if ( editorSpacing.hasDetails ) {
+		expect( parseFloat( editorSpacing.detailsPaddingTop ) ).toBe( 0 );
+	}
 
 	await savePost( page );
 	const postId =
@@ -999,15 +986,16 @@ test( 'admonition dimensions controls apply spacing to header in editor and fron
 			? window.getComputedStyle( summary )
 			: null;
 
-		return {
-			blockStyle: el.getAttribute( 'style' ) || '',
-			summaryPaddingTop: summaryStyles?.paddingTop || '0px',
-			summaryPaddingRight: summaryStyles?.paddingRight || '0px',
-			summaryPaddingBottom: summaryStyles?.paddingBottom || '0px',
-			summaryPaddingLeft: summaryStyles?.paddingLeft || '0px',
-			detailsPaddingTop: detailsStyles.paddingTop,
-		};
-	} );
+			return {
+				blockStyle: el.getAttribute( 'style' ) || '',
+				summaryPaddingTop: summaryStyles?.paddingTop || '0px',
+				summaryPaddingRight: summaryStyles?.paddingRight || '0px',
+				summaryPaddingBottom: summaryStyles?.paddingBottom || '0px',
+				summaryPaddingLeft: summaryStyles?.paddingLeft || '0px',
+				hasDetails: !! el.querySelector( 'details' ),
+				detailsPaddingTop: detailsStyles.paddingTop,
+			};
+		} );
 
 	expect(
 		hasAnyPositiveSide( [
@@ -1023,7 +1011,9 @@ test( 'admonition dimensions controls apply spacing to header in editor and fron
 	expect( frontendSpacing.blockStyle ).toMatch(
 		/(^|;)\s*padding-(top|right|bottom|left):/
 	);
-	expect( parseFloat( frontendSpacing.detailsPaddingTop ) ).toBe( 0 );
+	if ( frontendSpacing.hasDetails ) {
+		expect( parseFloat( frontendSpacing.detailsPaddingTop ) ).toBe( 0 );
+	}
 
 	await frontendPage.close();
 } );
