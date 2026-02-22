@@ -48,19 +48,21 @@ export default function save( { attributes } ) {
 		blockStyle[ '--admonition-header-bg-custom' ] = customHeaderBgColor;
 	}
 	if ( customHeaderTextColor ) {
-		blockStyle[ '--admonition-header-text-custom' ] =
-			customHeaderTextColor;
+		blockStyle[ '--admonition-header-text-custom' ] = customHeaderTextColor;
 	}
 	if ( enableCustomBorder ) {
 		if ( customBorderColor ) {
 			blockStyle[ '--admonition-accent-left-color' ] = customBorderColor;
 		}
 		if ( typeof customBorderWidth === 'number' ) {
-			blockStyle[ '--admonition-accent-left-width' ] = `${ customBorderWidth }px`;
+			blockStyle[
+				'--admonition-accent-left-width'
+			] = `${ customBorderWidth }px`;
 		}
 		if ( typeof customBorderRadius === 'number' ) {
-			blockStyle[ '--admonition-corner-radius' ] =
-				`${ customBorderRadius }px`;
+			blockStyle[
+				'--admonition-corner-radius'
+			] = `${ customBorderRadius }px`;
 		}
 	}
 

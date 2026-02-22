@@ -129,8 +129,12 @@ describe( 'Save', () => {
 		);
 
 		const wrapperDiv = container.firstChild;
-		expect( wrapperDiv ).toHaveStyle( `--admonition-accent-left-color: #123456` );
-		expect( wrapperDiv ).toHaveStyle( `--admonition-accent-left-width: 9px` );
+		expect( wrapperDiv ).toHaveStyle(
+			`--admonition-accent-left-color: #123456`
+		);
+		expect( wrapperDiv ).toHaveStyle(
+			`--admonition-accent-left-width: 9px`
+		);
 		expect( wrapperDiv ).toHaveStyle( `--admonition-corner-radius: 7px` );
 	} );
 
