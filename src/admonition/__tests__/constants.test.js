@@ -15,7 +15,7 @@ describe( 'Admonition Constants', () => {
 		);
 		expect( ADMONITION_TYPES.note.styles ).toHaveProperty(
 			'primary',
-			'#007cba'
+			'#555555'
 		);
 
 		// Check a few critical keys on the 'danger' type
