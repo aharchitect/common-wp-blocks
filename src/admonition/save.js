@@ -103,19 +103,16 @@ export default function save( { attributes } ) {
 			: resolvedBorderValue?.style;
 
 		if ( linkedWidth ) {
-			blockStyle[ '--admonition-edge-left-width' ] =
-				linkedWidth;
+			blockStyle[ '--admonition-edge-left-width' ] = linkedWidth;
 			blockStyle[ '--admonition-edge-top-width' ] = '0px';
 			blockStyle[ '--admonition-edge-right-width' ] = '0px';
 			blockStyle[ '--admonition-edge-bottom-width' ] = '0px';
 		}
 		if ( linkedColor ) {
-			blockStyle[ '--admonition-edge-left-color' ] =
-				linkedColor;
+			blockStyle[ '--admonition-edge-left-color' ] = linkedColor;
 		}
 		if ( linkedStyle ) {
-			blockStyle[ '--admonition-edge-left-style' ] =
-				linkedStyle;
+			blockStyle[ '--admonition-edge-left-style' ] = linkedStyle;
 		}
 	}
 
@@ -135,7 +132,9 @@ export default function save( { attributes } ) {
 			'--admonition-corner-radius'
 		] = `${ topLeft } ${ topRight } ${ bottomRight } ${ bottomLeft }`;
 	} else if ( typeof customBorderRadius === 'number' ) {
-		blockStyle[ '--admonition-corner-radius' ] = `${ customBorderRadius }px`;
+		blockStyle[
+			'--admonition-corner-radius'
+		] = `${ customBorderRadius }px`;
 	}
 
 	const blockProps = useBlockProps.save( {

@@ -134,7 +134,9 @@ describe( 'Save', () => {
 		);
 
 		const wrapperDiv = container.firstChild;
-		expect( wrapperDiv ).toHaveStyle( `--admonition-edge-left-color: #123456` );
+		expect( wrapperDiv ).toHaveStyle(
+			`--admonition-edge-left-color: #123456`
+		);
 		expect( wrapperDiv ).toHaveStyle( `--admonition-edge-left-width: 9px` );
 		expect( wrapperDiv ).toHaveStyle( `--admonition-edge-top-width: 0px` );
 		expect( wrapperDiv ).toHaveStyle( `--admonition-corner-radius: 7px` );

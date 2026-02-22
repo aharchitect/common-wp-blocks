@@ -137,19 +137,16 @@ export default function Edit( { attributes, setAttributes } ) {
 			: resolvedBorderValue?.style;
 
 		if ( linkedWidth ) {
-			blockStyle[ '--admonition-edge-left-width' ] =
-				linkedWidth;
+			blockStyle[ '--admonition-edge-left-width' ] = linkedWidth;
 			blockStyle[ '--admonition-edge-top-width' ] = '0px';
 			blockStyle[ '--admonition-edge-right-width' ] = '0px';
 			blockStyle[ '--admonition-edge-bottom-width' ] = '0px';
 		}
 		if ( linkedColor ) {
-			blockStyle[ '--admonition-edge-left-color' ] =
-				linkedColor;
+			blockStyle[ '--admonition-edge-left-color' ] = linkedColor;
 		}
 		if ( linkedStyle ) {
-			blockStyle[ '--admonition-edge-left-style' ] =
-				linkedStyle;
+			blockStyle[ '--admonition-edge-left-style' ] = linkedStyle;
 		}
 	}
 
@@ -169,7 +166,9 @@ export default function Edit( { attributes, setAttributes } ) {
 			'--admonition-corner-radius'
 		] = `${ topLeft } ${ topRight } ${ bottomRight } ${ bottomLeft }`;
 	} else if ( typeof customBorderRadius === 'number' ) {
-		blockStyle[ '--admonition-corner-radius' ] = `${ customBorderRadius }px`;
+		blockStyle[
+			'--admonition-corner-radius'
+		] = `${ customBorderRadius }px`;
 	}
 
 	// blockProps manages classes and inline styles (for color controls)
@@ -185,10 +184,7 @@ export default function Edit( { attributes, setAttributes } ) {
 
 	const maybeSyncHeaderToBorderColor = ( newColor, nextAttributes ) => {
 		// Offer a one-click sync to keep header and border visually aligned.
-		if (
-			newColor &&
-			! customHeaderBgColor
-		) {
+		if ( newColor && ! customHeaderBgColor ) {
 			let shouldSyncHeader = false;
 			if (
 				typeof window !== 'undefined' &&
