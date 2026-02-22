@@ -218,6 +218,40 @@ async function prepareAdmonitionEditor( page, baseURL, postTitle, postBody ) {
 	return { resolvedBase, editor, admonitionBlock };
 }
 
+async function ensureDimensionControlEnabled( page, labelPattern ) {
+	const slider = page.getByLabel( labelPattern ).first();
+	if ( await slider.count() ) {
+		return slider;
+	}
+
+	const optionsButton = page
+		.getByRole( 'button', { name: /Dimensions options/i } )
+		.first();
+	await expect( optionsButton ).toBeVisible( { timeout: 15000 } );
+	await optionsButton.click();
+
+	const toggleCandidate = page
+		.getByRole( 'menuitemcheckbox', { name: labelPattern } )
+		.first();
+	if ( await toggleCandidate.count() ) {
+		await toggleCandidate.click();
+	} else {
+		await page
+			.getByRole( 'menuitem', { name: labelPattern } )
+			.first()
+			.click();
+	}
+
+	// Close any open menu/popup and assert the control appears.
+	await page.keyboard.press( 'Escape' );
+	await expect( slider ).toBeVisible( { timeout: 15000 } );
+	return slider;
+}
+
+function hasAnyPositiveSide( sides ) {
+	return sides.some( ( value ) => parseFloat( value || '0' ) > 0 );
+}
+
 // E2E: Insert an admonition block, publish, and verify front-end rendering.
 test( 'create and render admonition block', async ( { page, baseURL } ) => {
 	test.setTimeout( 90000 ); // Allow up to 90s for slow environments
@@ -783,6 +817,132 @@ test( 'admonition border controls are visible and border/radius render in editor
 	expect( frontendStyles.right ).toBe( '0px' );
 	expect( frontendStyles.bottom ).toBe( '0px' );
 	expect( frontendStyles.radius ).toBe( '12px' );
+
+	await frontendPage.close();
+} );
+
+test( 'admonition dimensions controls apply spacing to header in editor and frontend', async ( {
+	page,
+	baseURL,
+} ) => {
+	test.setTimeout( 90000 );
+	const { resolvedBase, admonitionBlock } = await prepareAdmonitionEditor(
+		page,
+		baseURL,
+		'Admonition Dimensions Controls E2E',
+		'Base paragraph for insertion.'
+	);
+
+	await admonitionBlock.locator( '.admonition-header' ).first().click();
+	await ensureStylesInspectorVisible( page );
+
+	// 1) Dimensions controls are optional by default, then enabled via panel options.
+	const paddingSlider = await ensureDimensionControlEnabled(
+		page,
+		/padding/i
+	);
+	const marginSlider = await ensureDimensionControlEnabled( page, /margin/i );
+	await expect( paddingSlider ).toBeVisible( { timeout: 15000 } );
+	await expect( marginSlider ).toBeVisible( { timeout: 15000 } );
+
+	// 2) Update padding + margin sliders.
+	const initialPaddingValue = await paddingSlider.inputValue();
+	const initialMarginValue = await marginSlider.inputValue();
+	await paddingSlider.press( 'ArrowRight' );
+	await marginSlider.press( 'ArrowRight' );
+	const updatedPaddingValue = await paddingSlider.inputValue();
+	const updatedMarginValue = await marginSlider.inputValue();
+	expect( updatedPaddingValue ).not.toBe( initialPaddingValue );
+	expect( updatedMarginValue ).not.toBe( initialMarginValue );
+
+	// 3) Editor rendering: spacing should be on summary header, not details container.
+	const editorSpacing = await admonitionBlock.evaluate( ( el ) => {
+		const details = el.querySelector( 'details' ) || el;
+		const summary =
+			el.querySelector( 'summary.admonition-header' ) ||
+			el.querySelector( '.admonition-header' );
+		const detailsStyles = window.getComputedStyle( details );
+		const summaryStyles = summary
+			? window.getComputedStyle( summary )
+			: null;
+
+		return {
+			blockStyle: el.getAttribute( 'style' ) || '',
+			summaryPaddingTop: summaryStyles?.paddingTop || '0px',
+			summaryPaddingRight: summaryStyles?.paddingRight || '0px',
+			summaryPaddingBottom: summaryStyles?.paddingBottom || '0px',
+			summaryPaddingLeft: summaryStyles?.paddingLeft || '0px',
+			detailsPaddingTop: detailsStyles.paddingTop,
+		};
+	} );
+
+	expect(
+		hasAnyPositiveSide( [
+			editorSpacing.summaryPaddingTop,
+			editorSpacing.summaryPaddingRight,
+			editorSpacing.summaryPaddingBottom,
+			editorSpacing.summaryPaddingLeft,
+		] )
+	).toBe( true );
+	expect( editorSpacing.blockStyle ).toMatch(
+		/(^|;)\s*margin-(top|right|bottom|left):/
+	);
+	expect( editorSpacing.blockStyle ).toMatch(
+		/(^|;)\s*padding-(top|right|bottom|left):/
+	);
+	expect( parseFloat( editorSpacing.detailsPaddingTop ) ).toBe( 0 );
+
+	await savePost( page );
+	const postId =
+		( await getCurrentPostId( page ) ) ||
+		getPostIdFromEditorUrl( page.url() );
+	if ( ! postId ) {
+		throw new Error( 'Could not determine post ID from editor URL.' );
+	}
+
+	// 4) Frontend rendering should keep the same targeting behavior.
+	const frontendPage = await page.context().newPage();
+	await goToFrontendPost( frontendPage, resolvedBase, postId );
+	const frontendBlock = frontendPage
+		.locator( '.wp-block-common-wp-blocks-admonition' )
+		.first();
+	await expect( frontendBlock ).toBeVisible( { timeout: 15000 } );
+
+	const frontendSpacing = await frontendBlock.evaluate( ( el ) => {
+		const details = el.querySelector( 'details' ) || el;
+		const summary =
+			el.querySelector( 'summary.admonition-header' ) ||
+			el.querySelector( '.admonition-header' );
+		const detailsStyles = window.getComputedStyle( details );
+		const summaryStyles = summary
+			? window.getComputedStyle( summary )
+			: null;
+
+		return {
+			blockStyle: el.getAttribute( 'style' ) || '',
+			summaryPaddingTop: summaryStyles?.paddingTop || '0px',
+			summaryPaddingRight: summaryStyles?.paddingRight || '0px',
+			summaryPaddingBottom: summaryStyles?.paddingBottom || '0px',
+			summaryPaddingLeft: summaryStyles?.paddingLeft || '0px',
+			detailsPaddingTop: detailsStyles.paddingTop,
+		};
+	} );
+
+	expect(
+		hasAnyPositiveSide( [
+			frontendSpacing.summaryPaddingTop,
+			frontendSpacing.summaryPaddingRight,
+			frontendSpacing.summaryPaddingBottom,
+			frontendSpacing.summaryPaddingLeft,
+		] )
+	).toBe( true );
+	expect( frontendSpacing.blockStyle ).toMatch(
+		/(^|;)\s*margin-(top|right|bottom|left):/
+	);
+	expect( frontendSpacing.blockStyle ).toMatch(
+		/(^|;)\s*padding-(top|right|bottom|left):/
+	);
+	expect( parseFloat( frontendSpacing.detailsPaddingTop ) ).toBe( 0 );
 
 	await frontendPage.close();
 } );

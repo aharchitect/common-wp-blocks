@@ -27,6 +27,21 @@
 		"html": false,
 		"typography": {
 			"fontSize": true
+		},
+		"spacing": {
+			"margin": true,
+			"padding": true,
+			"__experimentalDefaultControls": {
+				"margin": false,
+				"padding": false
+			}
+		}
+	},
+	"selectors": {
+		"root": ".wp-block-common-wp-blocks-admonition",
+		"spacing": {
+			"margin": ".wp-block-common-wp-blocks-admonition[data-is-collapsible=\"true\"] summary.admonition-header, .wp-block-common-wp-blocks-admonition[data-is-collapsible=\"false\"] .admonition-header",
+			"padding": ".wp-block-common-wp-blocks-admonition[data-is-collapsible=\"true\"] summary.admonition-header, .wp-block-common-wp-blocks-admonition[data-is-collapsible=\"false\"] .admonition-header"
 		}
 	},
 	"attributes": {

@@ -53,6 +53,8 @@ $admonition-config: (
     /* Keep wrapper transparent; paint backgrounds on bordered containers. */
     background-color: transparent;
     padding: 0;
+    box-sizing: border-box;
+    max-width: 100%;
 
     /* --- ICON/HEADER STYLES FOR BOTH <DETAILS> AND NON-COLLAPSIBLE --- */
     .admonition-header {
@@ -60,6 +62,7 @@ $admonition-config: (
         display: flex;
         align-items: center;
         font-weight: bold;
+        box-sizing: border-box;
     }
 
     /* 1. Custom Icon Logic: When custom icon is used (via CSS variable)
@@ -158,6 +161,7 @@ $admonition-config: (
             align-items: center;
             position: relative;
             user-select: none; /* Prevent selection of title text on click */
+            box-sizing: border-box;
 
             /* Define the icon space/styles for ::before */
             &::before {
@@ -232,6 +236,7 @@ $admonition-config: (
             padding: 0.5em 1em;
             pointer-events: none; /* Disable interaction on the header */
             cursor: default;
+            box-sizing: border-box;
 
             .admonition-title {
                 margin: 0;
@@ -266,6 +271,7 @@ $admonition-config: (
                 pointer-events: none;
                 cursor: default;
                 list-style: none;
+                box-sizing: border-box;
             }
 
             summary::-webkit-details-marker {
