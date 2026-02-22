@@ -271,7 +271,7 @@ export default function Edit( { attributes, setAttributes } ) {
 							// Find the new default title
 							const newDefaultTitle =
 								ADMONITION_TYPES[ newType ]?.defaultTitle ||
-								'Note';
+								'Info';
 
 							// Reset custom icon and update type/title simultaneously
 							setAttributes( {

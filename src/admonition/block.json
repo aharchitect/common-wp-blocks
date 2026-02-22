@@ -9,8 +9,8 @@
 	"description": "A visually distinct, collapsible block for notes, tips, and warnings.",
 	"example": {
 		"attributes": {
-			"type": "note",
-			"title": "A Friendly Note",
+			"type": "info",
+			"title": "Helpful Info",
 			"isCollapsible": true,
 			"isInitiallyExpanded": false
 		},
@@ -47,13 +47,13 @@
 	"attributes": {
 		"type": {
 			"type": "string",
-			"default": "note"
+			"default": "info"
 		},
 		"title": {
 			"type": "string",
 			"source": "html",
 			"selector": ".admonition-title",
-			"default": "Note"
+			"default": "Info"
 		},
 		"customIconData": {
 			"type": "string",
