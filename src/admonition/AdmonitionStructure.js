@@ -1,6 +1,29 @@
 import { RichText, InnerBlocks } from '@wordpress/block-editor';
 import { Icon } from '@wordpress/components'; // Needed for the editor's toggle icon
 
+const ADMONITION_ALLOWED_BLOCKS = [
+	'core/paragraph',
+	'core/heading',
+	'core/list',
+	'core/quote',
+	'core/pullquote',
+	'core/table',
+	'core/image',
+	'core/gallery',
+	'core/video',
+	'core/audio',
+	'core/buttons',
+	'core/button',
+	'core/separator',
+	'core/spacer',
+	'core/group',
+	'core/columns',
+	'core/column',
+	'core/code',
+	'core/preformatted',
+	'core/details',
+];
+
 /**
  * Reusable component for the Admonition block's core HTML structure.
  * This component handles either a collapsible <details>/<summary> structure
@@ -50,12 +73,7 @@ export default function AdmonitionStructure( {
 					<ContentComponent
 						// InnerBlocks props are only valid in edit mode
 						{ ...( isEditing && {
-							allowedBlocks: [
-								'core/paragraph',
-								'core/list',
-								'core/image',
-								'core/button',
-							],
+							allowedBlocks: ADMONITION_ALLOWED_BLOCKS,
 							templateLock: false,
 							template: [
 								[
@@ -98,12 +116,7 @@ export default function AdmonitionStructure( {
 				<ContentComponent
 					// InnerBlocks props are only valid in edit mode
 					{ ...( isEditing && {
-						allowedBlocks: [
-							'core/paragraph',
-							'core/list',
-							'core/image',
-							'core/button',
-						],
+						allowedBlocks: ADMONITION_ALLOWED_BLOCKS,
 						templateLock: false,
 						template: [
 							[

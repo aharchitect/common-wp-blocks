@@ -97,6 +97,10 @@ describe( 'AdmonitionStructure', () => {
 			innerBlocks.getAttribute( 'data-props' )
 		);
 		expect( innerProps ).toHaveProperty( 'allowedBlocks' );
+		expect( innerProps.allowedBlocks ).toContain( 'core/table' );
+		expect( innerProps.allowedBlocks ).toContain( 'core/list' );
+		expect( innerProps.allowedBlocks ).toContain( 'core/heading' );
+		expect( innerProps.allowedBlocks ).toContain( 'core/columns' );
 	} );
 
 	// --- TEST 2: Save Mode (isEditing = false) ---

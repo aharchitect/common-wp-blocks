@@ -372,7 +372,7 @@ export default function Edit( { attributes, setAttributes } ) {
 							if ( typeof value === 'string' ) {
 								const normalized = value || '0px';
 								const parsedNumeric = parseFloat(
-									normalized.replace( /[^0-9.\-]/g, '' )
+									normalized.replace( /[^0-9.-]/g, '' )
 								);
 								setAttributes( {
 									customBorderRadiusValues: {
