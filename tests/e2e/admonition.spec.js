@@ -143,6 +143,20 @@ async function ensureBlockInspectorVisible( page ) {
 	}
 }
 
+async function ensureStylesInspectorVisible( page ) {
+	await ensureBlockInspectorVisible( page );
+	const stylesTab = page.getByRole( 'tab', { name: /^Styles$/i } );
+	if ( await stylesTab.count() ) {
+		await stylesTab.first().click();
+		return;
+	}
+
+	const stylesButton = page.getByRole( 'button', { name: /^Styles$/i } );
+	if ( await stylesButton.count() ) {
+		await stylesButton.first().click();
+	}
+}
+
 async function setEnableCollapsing( page, enabled ) {
 	await ensureBlockInspectorVisible( page );
 	const toggle = page
@@ -741,6 +755,112 @@ test( 'admonition starts collapsed when Start Expanded is off and reveals conten
 		.poll( () => frontendDetails.getAttribute( 'open' ) )
 		.not.toBeNull();
 	await expect( frontendParagraph ).toBeVisible();
+
+	await frontendPage.close();
+} );
+
+test( 'admonition border controls are visible and border/radius render in editor and frontend', async ( {
+	page,
+	baseURL,
+} ) => {
+	test.setTimeout( 90000 );
+	const resolvedBase =
+		baseURL || process.env.WP_BASE_URL || 'http://localhost:8000';
+
+	await loginToWordPress( page, resolvedBase, 'admin', 'pass' );
+	await dismissWelcomeGuideIfPresent( page );
+	await createPost(
+		page,
+		resolvedBase,
+		'Admonition Border Controls E2E',
+		'Base paragraph for insertion.'
+	);
+	await dismissWelcomeGuideIfPresent( page );
+
+	const editor = await getEditorContext( page );
+	await insertAdmonitionBlock( page, editor );
+
+	const admonitionBlock = editor
+		.locator( '.wp-block-common-wp-blocks-admonition' )
+		.last();
+	await admonitionBlock.waitFor( { state: 'visible', timeout: 15000 } );
+
+	await admonitionBlock.locator( '.admonition-header' ).first().click();
+	await ensureStylesInspectorVisible( page );
+
+	// Objective 1: editor controls are visible and usable.
+	const borderPanelTitle = page.getByText( /^Border$/i ).first();
+	await expect( borderPanelTitle ).toBeVisible( { timeout: 15000 } );
+	await expect(
+		page.getByText( /How linked borders work/i ).first()
+	).toBeVisible();
+	await expect(
+		page.locator( '.components-border-box-control' ).first()
+	).toBeVisible();
+	await expect( page.getByText( /^Radius$/i ).first() ).toBeVisible();
+
+	const borderWidthInput = page.getByLabel( /Border width/i ).first();
+	await expect( borderWidthInput ).toBeVisible();
+	await borderWidthInput.fill( '9' );
+	await borderWidthInput.press( 'Tab' );
+
+	const radiusInput = page.getByLabel( /Border radius/i ).first();
+	await expect( radiusInput ).toBeVisible();
+	await radiusInput.fill( '12' );
+	await radiusInput.press( 'Tab' );
+
+	// Objective 2: rendering in editor canvas reflects control values.
+	const editorStyles = await admonitionBlock.evaluate( ( el ) => {
+		const target = el.querySelector( 'details' ) || el;
+		const styles = window.getComputedStyle( target );
+		return {
+			left: styles.borderLeftWidth,
+			top: styles.borderTopWidth,
+			right: styles.borderRightWidth,
+			bottom: styles.borderBottomWidth,
+			radius: styles.borderTopLeftRadius,
+		};
+	} );
+
+	expect( editorStyles.left ).toBe( '9px' );
+	expect( editorStyles.top ).toBe( '0px' );
+	expect( editorStyles.right ).toBe( '0px' );
+	expect( editorStyles.bottom ).toBe( '0px' );
+	expect( editorStyles.radius ).toBe( '12px' );
+
+	await savePost( page );
+	const postId =
+		( await getCurrentPostId( page ) ) ||
+		getPostIdFromEditorUrl( page.url() );
+	if ( ! postId ) {
+		throw new Error( 'Could not determine post ID from editor URL.' );
+	}
+
+	// Objective 3: rendering in page view matches configured border/radius.
+	const frontendPage = await page.context().newPage();
+	await goToFrontendPost( frontendPage, resolvedBase, postId );
+	const frontendBlock = frontendPage
+		.locator( '.wp-block-common-wp-blocks-admonition' )
+		.first();
+	await expect( frontendBlock ).toBeVisible( { timeout: 15000 } );
+
+	const frontendStyles = await frontendBlock.evaluate( ( el ) => {
+		const target = el.querySelector( 'details' ) || el;
+		const styles = window.getComputedStyle( target );
+		return {
+			left: styles.borderLeftWidth,
+			top: styles.borderTopWidth,
+			right: styles.borderRightWidth,
+			bottom: styles.borderBottomWidth,
+			radius: styles.borderTopLeftRadius,
+		};
+	} );
+
+	expect( frontendStyles.left ).toBe( '9px' );
+	expect( frontendStyles.top ).toBe( '0px' );
+	expect( frontendStyles.right ).toBe( '0px' );
+	expect( frontendStyles.bottom ).toBe( '0px' );
+	expect( frontendStyles.radius ).toBe( '12px' );
 
 	await frontendPage.close();
 } );
