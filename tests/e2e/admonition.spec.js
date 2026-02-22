@@ -513,6 +513,87 @@ test( 'admonition custom base64 icon is persisted and rendered via mask', async 
 	await frontendPage.close();
 } );
 
+test( 'admonition hide icon removes icon rendering in editor and frontend', async ( {
+	page,
+	baseURL,
+} ) => {
+	test.setTimeout( 90000 );
+	const { resolvedBase, admonitionBlock } = await prepareAdmonitionEditor(
+		page,
+		baseURL,
+		'Admonition Hide Icon E2E',
+		'Base paragraph for insertion.'
+	);
+
+	const editorHeader = admonitionBlock
+		.locator( 'summary.admonition-header, .admonition-header' )
+		.first();
+	await expect( editorHeader ).toBeVisible( { timeout: 15000 } );
+	await editorHeader.click();
+	await ensureBlockInspectorVisible( page );
+
+	const hideIconToggle = page
+		.getByRole( 'checkbox', { name: /Hide icon/i } )
+		.first();
+	await expect( hideIconToggle ).toBeVisible( { timeout: 15000 } );
+	if ( ! ( await hideIconToggle.isChecked() ) ) {
+		await hideIconToggle.click();
+	}
+	await expect( hideIconToggle ).toBeChecked();
+	await expect( admonitionBlock ).toHaveAttribute( 'data-hide-icon', 'true' );
+
+	const editorMask = await readBeforeMaskImage( editorHeader );
+	const editorMaskValue =
+		editorMask.webkitMaskImage !== 'none'
+			? editorMask.webkitMaskImage
+			: editorMask.maskImage;
+	const editorHasRenderedIcon =
+		editorMaskValue !== 'none' ||
+		( editorMask.content !== 'none' &&
+			editorMask.content !== 'normal' &&
+			editorMask.content !== '""' );
+	expect( editorHasRenderedIcon ).toBe( false );
+	expect( editorMask.width ).toBe( '0px' );
+	expect( editorMask.height ).toBe( '0px' );
+
+	await savePost( page );
+	const postId =
+		( await getCurrentPostId( page ) ) ||
+		getPostIdFromEditorUrl( page.url() );
+	if ( ! postId ) {
+		throw new Error( 'Could not determine post ID from editor URL.' );
+	}
+
+	const frontendPage = await page.context().newPage();
+	await goToFrontendPost( frontendPage, resolvedBase, postId );
+	const frontendBlock = frontendPage
+		.locator( '.wp-block-common-wp-blocks-admonition' )
+		.first();
+	await expect( frontendBlock ).toBeVisible( { timeout: 15000 } );
+	await expect( frontendBlock ).toHaveAttribute( 'data-hide-icon', 'true' );
+
+	const frontendHeader = frontendBlock
+		.locator( 'summary.admonition-header, .admonition-header' )
+		.first();
+	await expect( frontendHeader ).toBeVisible( { timeout: 15000 } );
+
+	const frontendMask = await readBeforeMaskImage( frontendHeader );
+	const frontendMaskValue =
+		frontendMask.webkitMaskImage !== 'none'
+			? frontendMask.webkitMaskImage
+			: frontendMask.maskImage;
+	const frontendHasRenderedIcon =
+		frontendMaskValue !== 'none' ||
+		( frontendMask.content !== 'none' &&
+			frontendMask.content !== 'normal' &&
+			frontendMask.content !== '""' );
+	expect( frontendHasRenderedIcon ).toBe( false );
+	expect( frontendMask.width ).toBe( '0px' );
+	expect( frontendMask.height ).toBe( '0px' );
+
+	await frontendPage.close();
+} );
+
 test( 'admonition collapsing modes work in editor and frontend', async ( {
 	page,
 	baseURL,

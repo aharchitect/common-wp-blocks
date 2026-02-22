@@ -59,6 +59,10 @@
 			"type": "string",
 			"default": ""
 		},
+		"hideIcon": {
+			"type": "boolean",
+			"default": false
+		},
 		"isCollapsible": {
 			"type": "boolean",
 			"default": false

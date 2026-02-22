@@ -15,6 +15,13 @@ describe( 'Admonition block.json spacing support', () => {
 		expect( blockJson.supports.spacing.padding ).toBe( true );
 	} );
 
+	it( 'defines hideIcon attribute as an opt-in toggle', () => {
+		expect( blockJson.attributes?.hideIcon ).toEqual( {
+			type: 'boolean',
+			default: false,
+		} );
+	} );
+
 	it( 'keeps dimensions optional by default in the editor UI', () => {
 		const defaults =
 			blockJson.supports?.spacing?.__experimentalDefaultControls || {};

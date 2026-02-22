@@ -110,6 +110,16 @@ $admonition-config: (
         -webkit-mask-position: center;
     }
 
+    /* Optional setting: hide only the admonition icon, keep collapse arrows untouched. */
+    &[data-hide-icon="true"] summary.admonition-header::before,
+    &[data-hide-icon="true"] .admonition-header::before {
+        content: none !important;
+        display: none !important;
+        width: 0;
+        height: 0;
+        margin-right: 0;
+    }
+
 
     /* --- COLLAPSIBLE BLOCK STYLES (<DETAILS>/<SUMMARY> STRUCTURE) --- */
     details {

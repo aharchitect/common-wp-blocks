@@ -49,6 +49,7 @@ describe( 'Save', () => {
 			type: 'note',
 			title: 'Note Title',
 			customIconData: '',
+			hideIcon: false,
 			isCollapsible: false,
 			isInitiallyExpanded: true,
 			enableCustomBorder: false,
@@ -79,6 +80,7 @@ describe( 'Save', () => {
 		).toBe( '' );
 
 		expect( wrapperDiv ).toHaveAttribute( 'data-is-collapsible', 'false' );
+		expect( wrapperDiv ).toHaveAttribute( 'data-hide-icon', 'false' );
 
 		// 2. Check AdmonitionStructure props
 		const structure = screen.getByTestId( 'admonition-structure-save' );
@@ -118,6 +120,17 @@ describe( 'Save', () => {
 		expect( iconAttrs ).toEqual( {
 			'data-has-custom-icon': 'true',
 		} );
+	} );
+
+	it( 'should set data-hide-icon on save wrapper when hideIcon is enabled', () => {
+		defaultAttributes.hideIcon = true;
+
+		const { container } = render(
+			save( { attributes: defaultAttributes } )
+		);
+
+		const wrapperDiv = container.firstChild;
+		expect( wrapperDiv ).toHaveAttribute( 'data-hide-icon', 'true' );
 	} );
 
 	it( 'should generate split border CSS variables from customBorderBox', () => {

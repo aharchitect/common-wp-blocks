@@ -213,6 +213,7 @@ describe( 'Edit', () => {
 			type: 'note',
 			title: 'Note',
 			customIconData: '',
+			hideIcon: false,
 			isCollapsible: false,
 			isInitiallyExpanded: true,
 			enableCustomBorder: false,
@@ -283,6 +284,20 @@ describe( 'Edit', () => {
 		expect( blockWrapper?.getAttribute( 'style' ) || '' ).toContain(
 			'--admonition-icon-mask'
 		);
+	} );
+
+	it( 'should set data-hide-icon on the wrapper when hideIcon is enabled', () => {
+		mockAttributes.hideIcon = true;
+
+		const { container } = render(
+			<Edit
+				attributes={ mockAttributes }
+				setAttributes={ mockSetAttributes }
+			/>
+		);
+
+		const blockWrapper = container.querySelector( '.admonition-type-note' );
+		expect( blockWrapper ).toHaveAttribute( 'data-hide-icon', 'true' );
 	} );
 
 	it( 'should apply split border CSS variables from customBorderBox', () => {

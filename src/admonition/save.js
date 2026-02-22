@@ -24,6 +24,7 @@ export default function save( { attributes } ) {
 		type,
 		title,
 		customIconData,
+		hideIcon,
 		isCollapsible,
 		isInitiallyExpanded,
 		customBlockBgColor,
@@ -161,6 +162,7 @@ export default function save( { attributes } ) {
 	// Note: useBlockProps.save should not be modified, so we add to the outer div in AdmonitionStructure.
 	// However, if we put it on the wrapper div, we can easily target it in the SCSS.
 	blockProps[ 'data-is-collapsible' ] = isCollapsible ? 'true' : 'false';
+	blockProps[ 'data-hide-icon' ] = hideIcon ? 'true' : 'false';
 
 	// Determine the 'open' state for the <details> tag
 	// It's only 'open' if it's collapsible AND initially expanded

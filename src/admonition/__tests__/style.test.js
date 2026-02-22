@@ -49,4 +49,14 @@ describe( 'Admonition style icon mask wiring', () => {
 			style.match( /background-clip:\s*padding-box;/g ) || [];
 		expect( backgroundClipMatches.length ).toBeGreaterThanOrEqual( 2 );
 	} );
+
+	it( 'supports an explicit hide icon mode via data-hide-icon', () => {
+		const stylePath = path.join( __dirname, '..', 'style.scss' );
+		const style = fs.readFileSync( stylePath, 'utf8' );
+
+		expect( style ).toContain( '&[data-hide-icon="true"]' );
+		expect( style ).toContain( 'summary.admonition-header::before' );
+		expect( style ).toContain( '.admonition-header::before' );
+		expect( style ).toContain( 'content: none !important;' );
+	} );
 } );

@@ -54,6 +54,7 @@ export default function Edit( { attributes, setAttributes } ) {
 		type,
 		title,
 		customIconData,
+		hideIcon,
 		isCollapsible,
 		isInitiallyExpanded,
 		customBlockBgColor,
@@ -177,6 +178,7 @@ export default function Edit( { attributes, setAttributes } ) {
 		style: blockStyle,
 	} );
 	blockProps[ 'data-is-collapsible' ] = isCollapsible ? 'true' : 'false';
+	blockProps[ 'data-hide-icon' ] = hideIcon ? 'true' : 'false';
 
 	const iconAttribute = customIconData
 		? { 'data-has-custom-icon': 'true' }
@@ -288,6 +290,18 @@ export default function Edit( { attributes, setAttributes } ) {
 						value={ customIconData }
 						onChange={ ( newIconData ) =>
 							setAttributes( { customIconData: newIconData } )
+						}
+					/>
+					<ToggleControl
+						label="Hide icon"
+						help={
+							hideIcon
+								? 'Icon is hidden for this block.'
+								: 'Show the default or custom icon in the header.'
+						}
+						checked={ hideIcon }
+						onChange={ ( value ) =>
+							setAttributes( { hideIcon: value } )
 						}
 					/>
 				</PanelBody>
