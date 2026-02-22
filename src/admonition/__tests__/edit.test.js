@@ -43,8 +43,31 @@ jest.mock( '@wordpress/block-editor', () => ( {
 	__experimentalPanelColorGradientSettings: ( { children } ) => (
 		<div data-testid="panel-color-gradient-settings">{ children }</div>
 	),
-	__experimentalBorderRadiusControl: () => (
-		<div data-testid="border-radius-control" />
+	__experimentalBorderRadiusControl: ( { values, onChange } ) => (
+		<div
+			data-testid="border-radius-control"
+			data-values={ JSON.stringify( values ) }
+		>
+			<button
+				data-testid="radius-set-string"
+				onClick={ () => onChange( '12px' ) }
+			>
+				Set Radius String
+			</button>
+			<button
+				data-testid="radius-set-object"
+				onClick={ () =>
+					onChange( {
+						topLeft: '2px',
+						topRight: '4px',
+						bottomRight: '6px',
+						bottomLeft: '8px',
+					} )
+				}
+			>
+				Set Radius Object
+			</button>
+		</div>
 	),
 } ) );
 
@@ -76,7 +99,76 @@ jest.mock( '@wordpress/components', () => ( {
 	PanelBody: ( { children } ) => (
 		<div data-testid="panel-body">{ children }</div>
 	),
-	BorderBoxControl: () => <div data-testid="border-box-control" />,
+	BorderBoxControl: ( { onChange } ) => (
+		<div data-testid="border-box-control">
+			<button
+				data-testid="border-box-apply-linked"
+				onClick={ () =>
+					onChange( {
+						width: '3px',
+						color: '#334455',
+						style: 'solid',
+					} )
+				}
+			>
+				Apply Linked Border
+			</button>
+			<button
+				data-testid="border-box-apply-uniform-split"
+				onClick={ () =>
+					onChange( {
+						top: {
+							width: '4px',
+							color: '#123123',
+							style: 'solid',
+						},
+						right: {
+							width: '4px',
+							color: '#123123',
+							style: 'solid',
+						},
+						bottom: {
+							width: '4px',
+							color: '#123123',
+							style: 'solid',
+						},
+						left: {
+							width: '4px',
+							color: '#123123',
+							style: 'solid',
+						},
+					} )
+				}
+			>
+				Apply Uniform Split Border
+			</button>
+			<button
+				data-testid="border-box-apply-split"
+				onClick={ () =>
+					onChange( {
+						top: { width: '0px', color: '#111111', style: 'solid' },
+						right: {
+							width: '0px',
+							color: '#222222',
+							style: 'solid',
+						},
+						bottom: {
+							width: '0px',
+							color: '#333333',
+							style: 'solid',
+						},
+						left: {
+							width: '9px',
+							color: '#444444',
+							style: 'solid',
+						},
+					} )
+				}
+			>
+				Apply Split Border
+			</button>
+		</div>
+	),
 	Tooltip: ( { children } ) => <div data-testid="tooltip">{ children }</div>,
 	Icon: () => <span data-testid="mock-icon-component" />,
 	BaseControl: ( { children, label } ) => (
@@ -215,6 +307,206 @@ describe( 'Edit', () => {
 		expect( style ).toContain( '--admonition-edge-left-width: 8px' );
 		expect( style ).toContain( '--admonition-edge-top-width: 0px' );
 		expect( style ).toContain( '--admonition-corner-radius: 10px' );
+	} );
+
+	it( 'should normalize a uniform split border to the linked left-only output in style vars', () => {
+		mockAttributes.customBorderBox = {
+			top: { width: '4px', color: '#aaaaaa', style: 'solid' },
+			right: { width: '4px', color: '#aaaaaa', style: 'solid' },
+			bottom: { width: '4px', color: '#aaaaaa', style: 'solid' },
+			left: { width: '4px', color: '#aaaaaa', style: 'solid' },
+		};
+
+		const { container } = render(
+			<Edit
+				attributes={ mockAttributes }
+				setAttributes={ mockSetAttributes }
+			/>
+		);
+
+		const blockWrapper = container.querySelector( '.admonition-type-note' );
+		const style = blockWrapper?.getAttribute( 'style' ) || '';
+
+		expect( style ).toContain( '--admonition-edge-left-width: 4px' );
+		expect( style ).toContain( '--admonition-edge-left-color: #aaaaaa' );
+		expect( style ).toContain( '--admonition-edge-left-style: solid' );
+		expect( style ).toContain( '--admonition-edge-top-width: 0px' );
+		expect( style ).toContain( '--admonition-edge-right-width: 0px' );
+		expect( style ).toContain( '--admonition-edge-bottom-width: 0px' );
+		expect( style ).not.toContain( '--admonition-edge-top-color' );
+	} );
+
+	it( 'should keep split border vars for truly split values', () => {
+		mockAttributes.customBorderBox = {
+			top: { width: '1px', color: '#111111', style: 'solid' },
+			right: { width: '2px', color: '#222222', style: 'solid' },
+			bottom: { width: '3px', color: '#333333', style: 'solid' },
+			left: { width: '4px', color: '#444444', style: 'solid' },
+		};
+
+		const { container } = render(
+			<Edit
+				attributes={ mockAttributes }
+				setAttributes={ mockSetAttributes }
+			/>
+		);
+
+		const blockWrapper = container.querySelector( '.admonition-type-note' );
+		const style = blockWrapper?.getAttribute( 'style' ) || '';
+
+		expect( style ).toContain( '--admonition-edge-top-width: 1px' );
+		expect( style ).toContain( '--admonition-edge-right-width: 2px' );
+		expect( style ).toContain( '--admonition-edge-bottom-width: 3px' );
+		expect( style ).toContain( '--admonition-edge-left-width: 4px' );
+		expect( style ).toContain( '--admonition-edge-top-color: #111111' );
+		expect( style ).toContain( '--admonition-edge-right-color: #222222' );
+		expect( style ).toContain( '--admonition-edge-bottom-color: #333333' );
+		expect( style ).toContain( '--admonition-edge-left-color: #444444' );
+	} );
+
+	it( 'should serialize linked border object values to left-only vars', () => {
+		mockAttributes.customBorderBox = {
+			width: '6px',
+			color: '#0f0f0f',
+			style: 'solid',
+		};
+
+		const { container } = render(
+			<Edit
+				attributes={ mockAttributes }
+				setAttributes={ mockSetAttributes }
+			/>
+		);
+
+		const blockWrapper = container.querySelector( '.admonition-type-note' );
+		const style = blockWrapper?.getAttribute( 'style' ) || '';
+
+		expect( style ).toContain( '--admonition-edge-left-width: 6px' );
+		expect( style ).toContain( '--admonition-edge-left-color: #0f0f0f' );
+		expect( style ).toContain( '--admonition-edge-left-style: solid' );
+		expect( style ).toContain( '--admonition-edge-top-width: 0px' );
+		expect( style ).toContain( '--admonition-edge-right-width: 0px' );
+		expect( style ).toContain( '--admonition-edge-bottom-width: 0px' );
+	} );
+
+	it( 'should serialize corner radius from customBorderRadiusValues object', () => {
+		mockAttributes.customBorderRadiusValues = {
+			topLeft: '2px',
+			topRight: '4px',
+			bottomRight: '6px',
+			bottomLeft: '8px',
+		};
+		mockAttributes.customBorderRadius = 99;
+
+		const { container } = render(
+			<Edit
+				attributes={ mockAttributes }
+				setAttributes={ mockSetAttributes }
+			/>
+		);
+
+		const blockWrapper = container.querySelector( '.admonition-type-note' );
+		const style = blockWrapper?.getAttribute( 'style' ) || '';
+
+		expect( style ).toContain(
+			'--admonition-corner-radius: 2px 4px 6px 8px'
+		);
+		expect( style ).not.toContain( '--admonition-corner-radius: 99px' );
+	} );
+
+	it( 'should fall back to legacy numeric customBorderRadius when object values are empty', () => {
+		mockAttributes.customBorderRadiusValues = {};
+		mockAttributes.customBorderRadius = 13;
+
+		const { container } = render(
+			<Edit
+				attributes={ mockAttributes }
+				setAttributes={ mockSetAttributes }
+			/>
+		);
+
+		const blockWrapper = container.querySelector( '.admonition-type-note' );
+		const style = blockWrapper?.getAttribute( 'style' ) || '';
+
+		expect( style ).toContain( '--admonition-corner-radius: 13px' );
+	} );
+
+	it( 'should sync header background to border color when confirm is accepted', () => {
+		const confirmSpy = jest
+			.spyOn( window, 'confirm' )
+			.mockReturnValue( true );
+
+		render(
+			<Edit
+				attributes={ mockAttributes }
+				setAttributes={ mockSetAttributes }
+			/>
+		);
+
+		fireEvent.click( screen.getByTestId( 'border-box-apply-linked' ) );
+
+		expect( mockSetAttributes ).toHaveBeenCalledWith( {
+			customBorderBox: {
+				width: '3px',
+				color: '#334455',
+				style: 'solid',
+			},
+			enableCustomBorder: true,
+			customBorderColor: '#334455',
+			customHeaderBgColor: '#334455',
+		} );
+		expect( confirmSpy ).toHaveBeenCalledWith(
+			'Apply the same color to the header background?'
+		);
+
+		confirmSpy.mockRestore();
+	} );
+
+	it( 'should not sync header background to border color when confirm is declined', () => {
+		const confirmSpy = jest
+			.spyOn( window, 'confirm' )
+			.mockReturnValue( false );
+
+		render(
+			<Edit
+				attributes={ mockAttributes }
+				setAttributes={ mockSetAttributes }
+			/>
+		);
+
+		fireEvent.click( screen.getByTestId( 'border-box-apply-linked' ) );
+
+		expect( mockSetAttributes ).toHaveBeenCalledWith( {
+			customBorderBox: {
+				width: '3px',
+				color: '#334455',
+				style: 'solid',
+			},
+			enableCustomBorder: true,
+			customBorderColor: '#334455',
+		} );
+
+		confirmSpy.mockRestore();
+	} );
+
+	it( 'should use fallback border width when customBorderBox is empty', () => {
+		mockAttributes.customBorderBox = {};
+		mockAttributes.customBorderWidth = 11;
+
+		const { container } = render(
+			<Edit
+				attributes={ mockAttributes }
+				setAttributes={ mockSetAttributes }
+			/>
+		);
+
+		const blockWrapper = container.querySelector( '.admonition-type-note' );
+		const style = blockWrapper?.getAttribute( 'style' ) || '';
+
+		expect( style ).toContain( '--admonition-edge-left-width: 11px' );
+		expect( style ).toContain( '--admonition-edge-top-width: 0px' );
+		expect( style ).toContain( '--admonition-edge-right-width: 0px' );
+		expect( style ).toContain( '--admonition-edge-bottom-width: 0px' );
 	} );
 
 	// --- TEST 3: SelectControl Attribute Change and Reset Logic ---

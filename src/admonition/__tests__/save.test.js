@@ -142,6 +142,125 @@ describe( 'Save', () => {
 		expect( wrapperDiv ).toHaveStyle( `--admonition-corner-radius: 7px` );
 	} );
 
+	it( 'should normalize a uniform split border to linked left-only vars in save output', () => {
+		defaultAttributes.customBorderBox = {
+			top: { width: '4px', color: '#ababab', style: 'solid' },
+			right: { width: '4px', color: '#ababab', style: 'solid' },
+			bottom: { width: '4px', color: '#ababab', style: 'solid' },
+			left: { width: '4px', color: '#ababab', style: 'solid' },
+		};
+
+		const { container } = render(
+			save( { attributes: defaultAttributes } )
+		);
+
+		const wrapperDiv = container.firstChild;
+		const style = wrapperDiv?.getAttribute( 'style' ) || '';
+
+		expect( style ).toContain( '--admonition-edge-left-width: 4px' );
+		expect( style ).toContain( '--admonition-edge-left-color: #ababab' );
+		expect( style ).toContain( '--admonition-edge-left-style: solid' );
+		expect( style ).toContain( '--admonition-edge-top-width: 0px' );
+		expect( style ).toContain( '--admonition-edge-right-width: 0px' );
+		expect( style ).toContain( '--admonition-edge-bottom-width: 0px' );
+		expect( style ).not.toContain( '--admonition-edge-top-color' );
+	} );
+
+	it( 'should preserve true split border values in save output', () => {
+		defaultAttributes.customBorderBox = {
+			top: { width: '1px', color: '#111111', style: 'solid' },
+			right: { width: '2px', color: '#222222', style: 'solid' },
+			bottom: { width: '3px', color: '#333333', style: 'solid' },
+			left: { width: '4px', color: '#444444', style: 'solid' },
+		};
+
+		const { container } = render(
+			save( { attributes: defaultAttributes } )
+		);
+
+		const wrapperDiv = container.firstChild;
+		const style = wrapperDiv?.getAttribute( 'style' ) || '';
+
+		expect( style ).toContain( '--admonition-edge-top-width: 1px' );
+		expect( style ).toContain( '--admonition-edge-right-width: 2px' );
+		expect( style ).toContain( '--admonition-edge-bottom-width: 3px' );
+		expect( style ).toContain( '--admonition-edge-left-width: 4px' );
+		expect( style ).toContain( '--admonition-edge-top-color: #111111' );
+		expect( style ).toContain( '--admonition-edge-right-color: #222222' );
+		expect( style ).toContain( '--admonition-edge-bottom-color: #333333' );
+		expect( style ).toContain( '--admonition-edge-left-color: #444444' );
+	} );
+
+	it( 'should serialize linked border object to left-only vars in save output', () => {
+		defaultAttributes.customBorderBox = {
+			width: '6px',
+			color: '#101010',
+			style: 'solid',
+		};
+
+		const { container } = render(
+			save( { attributes: defaultAttributes } )
+		);
+
+		const wrapperDiv = container.firstChild;
+		const style = wrapperDiv?.getAttribute( 'style' ) || '';
+
+		expect( style ).toContain( '--admonition-edge-left-width: 6px' );
+		expect( style ).toContain( '--admonition-edge-left-color: #101010' );
+		expect( style ).toContain( '--admonition-edge-left-style: solid' );
+		expect( style ).toContain( '--admonition-edge-top-width: 0px' );
+		expect( style ).toContain( '--admonition-edge-right-width: 0px' );
+		expect( style ).toContain( '--admonition-edge-bottom-width: 0px' );
+	} );
+
+	it( 'should serialize corner radius from customBorderRadiusValues in save output', () => {
+		defaultAttributes.customBorderRadiusValues = {
+			topLeft: '2px',
+			topRight: '4px',
+			bottomRight: '6px',
+			bottomLeft: '8px',
+		};
+		defaultAttributes.customBorderRadius = 33;
+
+		const { container } = render(
+			save( { attributes: defaultAttributes } )
+		);
+
+		const wrapperDiv = container.firstChild;
+		expect( wrapperDiv ).toHaveStyle(
+			`--admonition-corner-radius: 2px 4px 6px 8px`
+		);
+	} );
+
+	it( 'should use legacy numeric radius fallback when customBorderRadiusValues are empty in save output', () => {
+		defaultAttributes.customBorderRadiusValues = {};
+		defaultAttributes.customBorderRadius = 14;
+
+		const { container } = render(
+			save( { attributes: defaultAttributes } )
+		);
+
+		const wrapperDiv = container.firstChild;
+		expect( wrapperDiv ).toHaveStyle( `--admonition-corner-radius: 14px` );
+	} );
+
+	it( 'should use fallback border width when customBorderBox is empty in save output', () => {
+		defaultAttributes.customBorderBox = {};
+		defaultAttributes.customBorderWidth = 12;
+
+		const { container } = render(
+			save( { attributes: defaultAttributes } )
+		);
+
+		const wrapperDiv = container.firstChild;
+		const style = wrapperDiv?.getAttribute( 'style' ) || '';
+
+		expect( style ).toContain( '--admonition-edge-left-width: 12px' );
+		expect( style ).toContain( '--admonition-edge-top-width: 0px' );
+		expect( style ).toContain( '--admonition-edge-right-width: 0px' );
+		expect( style ).toContain( '--admonition-edge-bottom-width: 0px' );
+	} );
+
 	// --- TEST 3: Collapsible State Logic ---
 	it( 'should correctly set blockProps collapsible attribute and AdmonitionStructure isOpen state', () => {
 		// Scenario 1: Collapsible, Initially Expanded (Open)
