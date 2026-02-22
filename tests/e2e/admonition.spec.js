@@ -544,9 +544,9 @@ test( 'admonition hide icon removes icon rendering in editor and frontend', asyn
 			? editorMask.webkitMaskImage
 			: editorMask.maskImage;
 	expect( editorMaskValue ).toBeDefined();
-	expect(
-		editorMask.content === 'none' || editorMask.content === '""'
-	).toBe( true );
+	expect( editorMask.content === 'none' || editorMask.content === '""' ).toBe(
+		true
+	);
 	expect( editorMask.width ).toBe( '0px' );
 	expect( editorMask.height ).toBe( '0px' );
 
@@ -931,16 +931,16 @@ test( 'admonition dimensions controls apply spacing to header in editor and fron
 			? window.getComputedStyle( summary )
 			: null;
 
-			return {
-				blockStyle: el.getAttribute( 'style' ) || '',
-				summaryPaddingTop: summaryStyles?.paddingTop || '0px',
-				summaryPaddingRight: summaryStyles?.paddingRight || '0px',
-				summaryPaddingBottom: summaryStyles?.paddingBottom || '0px',
-				summaryPaddingLeft: summaryStyles?.paddingLeft || '0px',
-				hasDetails: !! el.querySelector( 'details' ),
-				detailsPaddingTop: detailsStyles.paddingTop,
-			};
-		} );
+		return {
+			blockStyle: el.getAttribute( 'style' ) || '',
+			summaryPaddingTop: summaryStyles?.paddingTop || '0px',
+			summaryPaddingRight: summaryStyles?.paddingRight || '0px',
+			summaryPaddingBottom: summaryStyles?.paddingBottom || '0px',
+			summaryPaddingLeft: summaryStyles?.paddingLeft || '0px',
+			hasDetails: !! el.querySelector( 'details' ),
+			detailsPaddingTop: detailsStyles.paddingTop,
+		};
+	} );
 
 	expect(
 		hasAnyPositiveSide( [
@@ -986,16 +986,16 @@ test( 'admonition dimensions controls apply spacing to header in editor and fron
 			? window.getComputedStyle( summary )
 			: null;
 
-			return {
-				blockStyle: el.getAttribute( 'style' ) || '',
-				summaryPaddingTop: summaryStyles?.paddingTop || '0px',
-				summaryPaddingRight: summaryStyles?.paddingRight || '0px',
-				summaryPaddingBottom: summaryStyles?.paddingBottom || '0px',
-				summaryPaddingLeft: summaryStyles?.paddingLeft || '0px',
-				hasDetails: !! el.querySelector( 'details' ),
-				detailsPaddingTop: detailsStyles.paddingTop,
-			};
-		} );
+		return {
+			blockStyle: el.getAttribute( 'style' ) || '',
+			summaryPaddingTop: summaryStyles?.paddingTop || '0px',
+			summaryPaddingRight: summaryStyles?.paddingRight || '0px',
+			summaryPaddingBottom: summaryStyles?.paddingBottom || '0px',
+			summaryPaddingLeft: summaryStyles?.paddingLeft || '0px',
+			hasDetails: !! el.querySelector( 'details' ),
+			detailsPaddingTop: detailsStyles.paddingTop,
+		};
+	} );
 
 	expect(
 		hasAnyPositiveSide( [
