@@ -61,7 +61,7 @@
 		},
 		"isCollapsible": {
 			"type": "boolean",
-			"default": true
+			"default": false
 		},
 		"isInitiallyExpanded": {
 			"type": "boolean",
