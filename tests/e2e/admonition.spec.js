@@ -191,48 +191,47 @@ async function setStartExpanded( page, enabled ) {
 	}
 }
 
+function resolveBaseUrl( baseURL ) {
+	return baseURL || process.env.WP_BASE_URL || 'http://localhost:8000';
+}
+
+async function prepareAdmonitionEditor( page, baseURL, postTitle, postBody ) {
+	const resolvedBase = resolveBaseUrl( baseURL );
+	await loginToWordPress( page, resolvedBase, 'admin', 'pass' );
+	await dismissWelcomeGuideIfPresent( page );
+	await createPost(
+		page,
+		resolvedBase,
+		postTitle,
+		postBody || 'Base paragraph for insertion.'
+	);
+	await dismissWelcomeGuideIfPresent( page );
+
+	const editor = await getEditorContext( page );
+	await insertAdmonitionBlock( page, editor );
+
+	const admonitionBlock = editor
+		.locator( '.wp-block-common-wp-blocks-admonition' )
+		.last();
+	await admonitionBlock.waitFor( { state: 'visible', timeout: 15000 } );
+
+	return { resolvedBase, editor, admonitionBlock };
+}
+
 // E2E: Insert an admonition block, publish, and verify front-end rendering.
 test( 'create and render admonition block', async ( { page, baseURL } ) => {
 	test.setTimeout( 90000 ); // Allow up to 90s for slow environments
-	// Resolve base URL: prefer Playwright fixture, then env, then localhost
-	const resolvedBase =
-		baseURL || process.env.WP_BASE_URL || 'http://localhost:8000';
+	const resolvedBase = resolveBaseUrl( baseURL );
 	logger.info( { baseURL }, 'Playwright baseURL' );
 	logger.info( { resolvedBase }, 'Resolved base URL' );
 	const admonitionTitleText = 'E2E Note Title';
 	const admonitionContentText = 'This is an admonition created by E2E test.';
-
-	logger.info( 'Navigating to login page...' );
-	await loginToWordPress( page, resolvedBase, 'admin', 'pass' );
-
-	// Extra: verify we are not still on the login page
-	const currentUrl = page.url();
-	logger.info( { currentUrl }, 'URL after login' );
-	if ( currentUrl.includes( 'wp-login.php' ) ) {
-		logger.error( 'Still on login page after login attempt!' );
-		throw new Error(
-			'Login failed: still on login page after login attempt.'
-		);
-	}
-
-	await dismissWelcomeGuideIfPresent( page );
-
-	logger.info( 'Opening new post editor...' );
-	// Try opening the new post editor directly; if it doesn't load, fallback to Posts->Add New
-	await createPost(
+	const { editor, admonitionBlock } = await prepareAdmonitionEditor(
 		page,
-		resolvedBase,
+		baseURL,
 		'End2End Test Post from Playwright',
 		'This is automated test content.'
 	);
-	await dismissWelcomeGuideIfPresent( page );
-
-	// Detect whether editor is rendered inside iframe and scope selectors accordingly.
-	const editor = await getEditorContext( page );
-
-	// Create the next block by placing cursor at the end of current paragraph and pressing Enter.
-	await dismissWelcomeGuideIfPresent( page );
-	await insertAdmonitionBlock( page, editor );
 
 	// Fill admonition title.
 	const admonitionTitle = editor
@@ -244,13 +243,6 @@ test( 'create and render admonition block', async ( { page, baseURL } ) => {
 	await page.keyboard.type( admonitionTitleText );
 
 	// Fill admonition content paragraph.
-	const admonitionBlock = editor
-		.locator(
-			'details:has(.admonition-title), .wp-block-common-wp-blocks-admonition'
-		)
-		.last();
-	await admonitionBlock.waitFor( { state: 'visible', timeout: 15000 } );
-
 	// Admonition uses <details>; ensure content is expanded before typing.
 	const detailsBlock = editor
 		.locator( 'details:has(.admonition-title)' )
@@ -296,26 +288,12 @@ test( 'admonition default icon mask renders and changes when type changes', asyn
 	baseURL,
 } ) => {
 	test.setTimeout( 90000 );
-	const resolvedBase =
-		baseURL || process.env.WP_BASE_URL || 'http://localhost:8000';
-
-	await loginToWordPress( page, resolvedBase, 'admin', 'pass' );
-	await dismissWelcomeGuideIfPresent( page );
-	await createPost(
+	const { resolvedBase, admonitionBlock } = await prepareAdmonitionEditor(
 		page,
-		resolvedBase,
+		baseURL,
 		'Admonition Icon Mask E2E',
 		'Base paragraph for insertion.'
 	);
-	await dismissWelcomeGuideIfPresent( page );
-
-	const editor = await getEditorContext( page );
-	await insertAdmonitionBlock( page, editor );
-
-	const admonitionBlock = editor
-		.locator( '.wp-block-common-wp-blocks-admonition' )
-		.last();
-	await admonitionBlock.waitFor( { state: 'visible', timeout: 15000 } );
 
 	const summary = admonitionBlock.locator( 'summary.admonition-header' );
 	await summary.click();
@@ -436,26 +414,12 @@ test( 'admonition custom base64 icon is persisted and rendered via mask', async 
 	baseURL,
 } ) => {
 	test.setTimeout( 90000 );
-	const resolvedBase =
-		baseURL || process.env.WP_BASE_URL || 'http://localhost:8000';
-
-	await loginToWordPress( page, resolvedBase, 'admin', 'pass' );
-	await dismissWelcomeGuideIfPresent( page );
-	await createPost(
+	const { resolvedBase, admonitionBlock } = await prepareAdmonitionEditor(
 		page,
-		resolvedBase,
+		baseURL,
 		'Admonition Custom Icon E2E',
 		'Base paragraph for insertion.'
 	);
-	await dismissWelcomeGuideIfPresent( page );
-
-	const editor = await getEditorContext( page );
-	await insertAdmonitionBlock( page, editor );
-
-	const admonitionBlock = editor
-		.locator( '.wp-block-common-wp-blocks-admonition' )
-		.last();
-	await admonitionBlock.waitFor( { state: 'visible', timeout: 15000 } );
 
 	const summary = admonitionBlock.locator( 'summary.admonition-header' );
 	await summary.click();
@@ -520,26 +484,12 @@ test( 'admonition collapsing modes work in editor and frontend', async ( {
 	baseURL,
 } ) => {
 	test.setTimeout( 90000 );
-	const resolvedBase =
-		baseURL || process.env.WP_BASE_URL || 'http://localhost:8000';
-
-	await loginToWordPress( page, resolvedBase, 'admin', 'pass' );
-	await dismissWelcomeGuideIfPresent( page );
-	await createPost(
+	const { resolvedBase, admonitionBlock } = await prepareAdmonitionEditor(
 		page,
-		resolvedBase,
+		baseURL,
 		'Admonition Collapsing Modes E2E',
 		'Base paragraph for insertion.'
 	);
-	await dismissWelcomeGuideIfPresent( page );
-
-	const editor = await getEditorContext( page );
-	await insertAdmonitionBlock( page, editor );
-
-	const admonitionBlock = editor
-		.locator( '.wp-block-common-wp-blocks-admonition' )
-		.last();
-	await admonitionBlock.waitFor( { state: 'visible', timeout: 15000 } );
 
 	const admonitionTitle = admonitionBlock
 		.locator( '.admonition-title[contenteditable="true"]' )
@@ -667,26 +617,12 @@ test( 'admonition starts collapsed when Start Expanded is off and reveals conten
 	baseURL,
 } ) => {
 	test.setTimeout( 90000 );
-	const resolvedBase =
-		baseURL || process.env.WP_BASE_URL || 'http://localhost:8000';
-
-	await loginToWordPress( page, resolvedBase, 'admin', 'pass' );
-	await dismissWelcomeGuideIfPresent( page );
-	await createPost(
+	const { resolvedBase, admonitionBlock } = await prepareAdmonitionEditor(
 		page,
-		resolvedBase,
+		baseURL,
 		'Admonition Start Collapsed E2E',
 		'Base paragraph for insertion.'
 	);
-	await dismissWelcomeGuideIfPresent( page );
-
-	const editor = await getEditorContext( page );
-	await insertAdmonitionBlock( page, editor );
-
-	const admonitionBlock = editor
-		.locator( '.wp-block-common-wp-blocks-admonition' )
-		.last();
-	await admonitionBlock.waitFor( { state: 'visible', timeout: 15000 } );
 
 	const bodyParagraph = admonitionBlock
 		.locator( '.admonition-content p[contenteditable="true"]' )
@@ -764,26 +700,12 @@ test( 'admonition border controls are visible and border/radius render in editor
 	baseURL,
 } ) => {
 	test.setTimeout( 90000 );
-	const resolvedBase =
-		baseURL || process.env.WP_BASE_URL || 'http://localhost:8000';
-
-	await loginToWordPress( page, resolvedBase, 'admin', 'pass' );
-	await dismissWelcomeGuideIfPresent( page );
-	await createPost(
+	const { resolvedBase, admonitionBlock } = await prepareAdmonitionEditor(
 		page,
-		resolvedBase,
+		baseURL,
 		'Admonition Border Controls E2E',
 		'Base paragraph for insertion.'
 	);
-	await dismissWelcomeGuideIfPresent( page );
-
-	const editor = await getEditorContext( page );
-	await insertAdmonitionBlock( page, editor );
-
-	const admonitionBlock = editor
-		.locator( '.wp-block-common-wp-blocks-admonition' )
-		.last();
-	await admonitionBlock.waitFor( { state: 'visible', timeout: 15000 } );
 
 	await admonitionBlock.locator( '.admonition-header' ).first().click();
 	await ensureStylesInspectorVisible( page );
