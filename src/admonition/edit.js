@@ -125,15 +125,15 @@ export default function Edit( { attributes, setAttributes } ) {
 			if (
 				typeof window !== 'undefined' &&
 				typeof window.confirm === 'function'
-				) {
-					try {
-						shouldSyncHeader = window.confirm(
-							'Apply the same color to the header background?'
-						);
-					} catch {
-						shouldSyncHeader = false;
-					}
+			) {
+				try {
+					shouldSyncHeader = window.confirm(
+						'Apply the same color to the header background?'
+					);
+				} catch {
+					shouldSyncHeader = false;
 				}
+			}
 			if ( shouldSyncHeader ) {
 				nextAttributes.customHeaderBgColor = newColor;
 			}
