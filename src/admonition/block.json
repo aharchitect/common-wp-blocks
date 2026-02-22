@@ -68,6 +68,12 @@
 			"type": "string",
 			"default": ""
 		},
+		"customBorderBox": {
+			"type": "object",
+			"default": {
+				"width": "1px"
+			}
+		},
 		"customBorderColor": {
 			"type": "string",
 			"default": ""
@@ -79,6 +85,10 @@
 		"customBorderRadius": {
 			"type": "number",
 			"default": 0
+		},
+		"customBorderRadiusValues": {
+			"type": "object",
+			"default": {}
 		}
 	},
 	"textdomain": "common-wp-blocks",

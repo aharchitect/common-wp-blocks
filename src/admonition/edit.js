@@ -13,6 +13,7 @@ import {
 	useBlockProps,
 	InspectorControls,
 	__experimentalPanelColorGradientSettings as PanelColorGradientSettings,
+	__experimentalBorderRadiusControl as BorderRadiusControl,
 } from '@wordpress/block-editor';
 
 import {
@@ -20,7 +21,9 @@ import {
 	PanelBody,
 	ToggleControl,
 	TextareaControl,
-	RangeControl,
+	BorderBoxControl,
+	Tooltip,
+	Icon,
 } from '@wordpress/components';
 
 /**
@@ -53,13 +56,15 @@ export default function Edit( { attributes, setAttributes } ) {
 		customIconData,
 		isCollapsible,
 		isInitiallyExpanded,
-		enableCustomBorder,
 		customBlockBgColor,
 		customHeaderBgColor,
 		customHeaderTextColor,
+		customBorderBox,
+		enableCustomBorder,
 		customBorderColor,
 		customBorderWidth,
 		customBorderRadius,
+		customBorderRadiusValues,
 	} = attributes;
 
 	// Determine the 'open' state for the editor's preview
@@ -80,20 +85,91 @@ export default function Edit( { attributes, setAttributes } ) {
 	if ( customHeaderTextColor ) {
 		blockStyle[ '--admonition-header-text-custom' ] = customHeaderTextColor;
 	}
-	if ( enableCustomBorder ) {
-		if ( customBorderColor ) {
-			blockStyle[ '--admonition-accent-left-color' ] = customBorderColor;
+	const defaultBorderValue = {
+		width: `${ customBorderWidth || 1 }px`,
+	};
+
+	const resolvedBorderValue =
+		customBorderBox && Object.keys( customBorderBox ).length
+			? customBorderBox
+			: defaultBorderValue;
+
+	const sides = [ 'top', 'right', 'bottom', 'left' ];
+	const hasSplitBorder = sides.some(
+		( side ) =>
+			typeof resolvedBorderValue?.[ side ] === 'object' &&
+			resolvedBorderValue?.[ side ] !== null
+	);
+	const isUniformSplitBorder = hasSplitBorder
+		? [ 'width', 'color', 'style' ].every( ( key ) => {
+				const values = sides.map(
+					( side ) => resolvedBorderValue?.[ side ]?.[ key ] || ''
+				);
+				return values.every( ( value ) => value === values[ 0 ] );
+		  } )
+		: false;
+
+	if ( hasSplitBorder && ! isUniformSplitBorder ) {
+		sides.forEach( ( side ) => {
+			const sideValue = resolvedBorderValue?.[ side ] || {};
+			if ( sideValue.width ) {
+				blockStyle[ `--admonition-edge-${ side }-width` ] =
+					sideValue.width;
+			}
+			if ( sideValue.color ) {
+				blockStyle[ `--admonition-edge-${ side }-color` ] =
+					sideValue.color;
+			}
+			if ( sideValue.style ) {
+				blockStyle[ `--admonition-edge-${ side }-style` ] =
+					sideValue.style;
+			}
+		} );
+	} else {
+		const linkedWidth = isUniformSplitBorder
+			? resolvedBorderValue?.left?.width
+			: resolvedBorderValue?.width;
+		const linkedColor = isUniformSplitBorder
+			? resolvedBorderValue?.left?.color
+			: resolvedBorderValue?.color;
+		const linkedStyle = isUniformSplitBorder
+			? resolvedBorderValue?.left?.style
+			: resolvedBorderValue?.style;
+
+		if ( linkedWidth ) {
+			blockStyle[ '--admonition-edge-left-width' ] =
+				linkedWidth;
+			blockStyle[ '--admonition-edge-top-width' ] = '0px';
+			blockStyle[ '--admonition-edge-right-width' ] = '0px';
+			blockStyle[ '--admonition-edge-bottom-width' ] = '0px';
 		}
-		if ( typeof customBorderWidth === 'number' ) {
-			blockStyle[
-				'--admonition-accent-left-width'
-			] = `${ customBorderWidth }px`;
+		if ( linkedColor ) {
+			blockStyle[ '--admonition-edge-left-color' ] =
+				linkedColor;
 		}
-		if ( typeof customBorderRadius === 'number' ) {
-			blockStyle[
-				'--admonition-corner-radius'
-			] = `${ customBorderRadius }px`;
+		if ( linkedStyle ) {
+			blockStyle[ '--admonition-edge-left-style' ] =
+				linkedStyle;
 		}
+	}
+
+	// Legacy fallback for existing content saved with earlier attributes.
+	if ( enableCustomBorder && customBorderColor ) {
+		blockStyle[ '--admonition-accent-left-color' ] = customBorderColor;
+	}
+	if (
+		customBorderRadiusValues &&
+		Object.keys( customBorderRadiusValues ).length
+	) {
+		const topLeft = customBorderRadiusValues.topLeft || '0px';
+		const topRight = customBorderRadiusValues.topRight || '0px';
+		const bottomRight = customBorderRadiusValues.bottomRight || '0px';
+		const bottomLeft = customBorderRadiusValues.bottomLeft || '0px';
+		blockStyle[
+			'--admonition-corner-radius'
+		] = `${ topLeft } ${ topRight } ${ bottomRight } ${ bottomLeft }`;
+	} else if ( typeof customBorderRadius === 'number' ) {
+		blockStyle[ '--admonition-corner-radius' ] = `${ customBorderRadius }px`;
 	}
 
 	// blockProps manages classes and inline styles (for color controls)
@@ -107,18 +183,10 @@ export default function Edit( { attributes, setAttributes } ) {
 		? { 'data-has-custom-icon': 'true' }
 		: { 'data-has-default-icon': 'true' };
 
-	const applyBorderColor = ( color ) => {
-		const newColor = color || '';
-		const nextAttributes = { customBorderColor: newColor };
-
-		if ( newColor ) {
-			nextAttributes.enableCustomBorder = true;
-		}
-
+	const maybeSyncHeaderToBorderColor = ( newColor, nextAttributes ) => {
 		// Offer a one-click sync to keep header and border visually aligned.
 		if (
 			newColor &&
-			newColor !== customBorderColor &&
 			! customHeaderBgColor
 		) {
 			let shouldSyncHeader = false;
@@ -137,6 +205,26 @@ export default function Edit( { attributes, setAttributes } ) {
 			if ( shouldSyncHeader ) {
 				nextAttributes.customHeaderBgColor = newColor;
 			}
+		}
+	};
+
+	const applyBorderBox = ( value ) => {
+		const nextAttributes = {
+			customBorderBox: value,
+			enableCustomBorder: true, // keep compatibility for already stored posts
+		};
+
+		const firstColor =
+			value?.left?.color ||
+			value?.top?.color ||
+			value?.right?.color ||
+			value?.bottom?.color ||
+			value?.color ||
+			'';
+
+		if ( firstColor && firstColor !== customBorderColor ) {
+			nextAttributes.customBorderColor = firstColor;
+			maybeSyncHeaderToBorderColor( firstColor, nextAttributes );
 		}
 
 		setAttributes( nextAttributes );
@@ -210,7 +298,7 @@ export default function Edit( { attributes, setAttributes } ) {
 				{ /* Color controls will automatically appear here because of block.json supports */ }
 			</InspectorControls>
 			<InspectorControls group="styles">
-				<PanelBody title="Colors & Border">
+				<PanelBody title="Colors">
 					<PanelColorGradientSettings
 						title="Colors"
 						settings={ [
@@ -247,60 +335,70 @@ export default function Edit( { attributes, setAttributes } ) {
 								disableCustomGradients: true,
 								clearable: true,
 							},
-							{
-								label: 'Border',
-								colorValue: customBorderColor,
-								onColorChange: applyBorderColor,
-								gradients: [],
-								disableCustomGradients: true,
-								clearable: true,
-							},
 						] }
 					/>
-					<ToggleControl
-						label="Enable custom border styling"
-						help={
-							enableCustomBorder
-								? 'Use custom border color, thickness, and radius.'
-								: 'Use border defaults from the selected admonition type.'
-						}
-						checked={ enableCustomBorder }
-						onChange={ ( value ) =>
-							setAttributes( { enableCustomBorder: value } )
-						}
+				</PanelBody>
+				<PanelBody title="Border">
+					<Tooltip text="Linked mode uses one value in the control, but this block applies it to the left border only. Unlink sides to set top, right, bottom, and left individually and at least one value must be different.">
+						<span
+							role="button"
+							tabIndex={ 0 }
+							aria-label="Border behavior help"
+							style={ {
+								display: 'inline-flex',
+								alignItems: 'center',
+								gap: '4px',
+								cursor: 'help',
+								marginBottom: '8px',
+							} }
+						>
+							<Icon icon="info-outline" />
+							How linked borders work
+						</span>
+					</Tooltip>
+					<BorderBoxControl
+						label="Border"
+						value={ resolvedBorderValue }
+						onChange={ applyBorderBox }
+						enableAlpha
+						enableStyle={ false }
+						size="__unstable-large"
+						__experimentalIsRenderedInSidebar
 					/>
-					{ enableCustomBorder && (
-						<>
-							<RangeControl
-								label="Border Thickness (px)"
-								value={ customBorderWidth }
-								onChange={ ( value ) =>
-									setAttributes( {
-										customBorderWidth:
-											typeof value === 'number'
-												? value
-												: 5,
-									} )
-								}
-								min={ 1 }
-								max={ 20 }
-							/>
-							<RangeControl
-								label="Border Radius (px)"
-								value={ customBorderRadius }
-								onChange={ ( value ) =>
-									setAttributes( {
-										customBorderRadius:
-											typeof value === 'number'
-												? value
-												: 0,
-									} )
-								}
-								min={ 0 }
-								max={ 40 }
-							/>
-						</>
-					) }
+					<BorderRadiusControl
+						values={
+							customBorderRadiusValues &&
+							Object.keys( customBorderRadiusValues ).length
+								? customBorderRadiusValues
+								: `${ customBorderRadius || 0 }px`
+						}
+						onChange={ ( value ) => {
+							if ( typeof value === 'string' ) {
+								const normalized = value || '0px';
+								const parsedNumeric = parseFloat(
+									normalized.replace( /[^0-9.\-]/g, '' )
+								);
+								setAttributes( {
+									customBorderRadiusValues: {
+										topLeft: normalized,
+										topRight: normalized,
+										bottomRight: normalized,
+										bottomLeft: normalized,
+									},
+									customBorderRadius: Number.isNaN(
+										parsedNumeric
+									)
+										? 0
+										: parsedNumeric,
+								} );
+								return;
+							}
+
+							setAttributes( {
+								customBorderRadiusValues: value || {},
+							} );
+						} }
+					/>
 				</PanelBody>
 			</InspectorControls>
 

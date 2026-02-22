@@ -43,6 +43,9 @@ jest.mock( '@wordpress/block-editor', () => ( {
 	__experimentalPanelColorGradientSettings: ( { children } ) => (
 		<div data-testid="panel-color-gradient-settings">{ children }</div>
 	),
+	__experimentalBorderRadiusControl: () => (
+		<div data-testid="border-radius-control" />
+	),
 } ) );
 
 jest.mock( '@wordpress/components', () => ( {
@@ -73,6 +76,9 @@ jest.mock( '@wordpress/components', () => ( {
 	PanelBody: ( { children } ) => (
 		<div data-testid="panel-body">{ children }</div>
 	),
+	BorderBoxControl: () => <div data-testid="border-box-control" />,
+	Tooltip: ( { children } ) => <div data-testid="tooltip">{ children }</div>,
+	Icon: () => <span data-testid="mock-icon-component" />,
 	BaseControl: ( { children, label } ) => (
 		<div data-testid={ `base-control-${ label }` }>{ children }</div>
 	),
@@ -121,9 +127,11 @@ describe( 'Edit', () => {
 			customBlockBgColor: '',
 			customHeaderBgColor: '',
 			customHeaderTextColor: '',
+			customBorderBox: { width: '1px' },
 			customBorderColor: '',
 			customBorderWidth: 5,
 			customBorderRadius: 0,
+			customBorderRadiusValues: {},
 		};
 		mockSetAttributes = jest.fn();
 	} );
@@ -185,11 +193,14 @@ describe( 'Edit', () => {
 		);
 	} );
 
-	it( 'should apply custom border CSS variables when custom border styling is enabled', () => {
-		mockAttributes.enableCustomBorder = true;
-		mockAttributes.customBorderColor = '#123456';
-		mockAttributes.customBorderWidth = 8;
-		mockAttributes.customBorderRadius = 6;
+	it( 'should apply split border CSS variables from customBorderBox', () => {
+		mockAttributes.customBorderBox = {
+			top: { width: '0px' },
+			right: { width: '0px' },
+			bottom: { width: '0px' },
+			left: { width: '8px', color: '#123456' },
+		};
+		mockAttributes.customBorderRadius = 10;
 
 		const { container } = render(
 			<Edit
@@ -200,9 +211,10 @@ describe( 'Edit', () => {
 
 		const blockWrapper = container.querySelector( '.admonition-type-note' );
 		const style = blockWrapper?.getAttribute( 'style' ) || '';
-		expect( style ).toContain( '--admonition-accent-left-color: #123456' );
-		expect( style ).toContain( '--admonition-accent-left-width: 8px' );
-		expect( style ).toContain( '--admonition-corner-radius: 6px' );
+		expect( style ).toContain( '--admonition-edge-left-color: #123456' );
+		expect( style ).toContain( '--admonition-edge-left-width: 8px' );
+		expect( style ).toContain( '--admonition-edge-top-width: 0px' );
+		expect( style ).toContain( '--admonition-corner-radius: 10px' );
 	} );
 
 	// --- TEST 3: SelectControl Attribute Change and Reset Logic ---

@@ -55,9 +55,11 @@ describe( 'Save', () => {
 			customBlockBgColor: '',
 			customHeaderBgColor: '',
 			customHeaderTextColor: '',
+			customBorderBox: { width: '1px' },
 			customBorderColor: '',
 			customBorderWidth: 5,
 			customBorderRadius: 0,
+			customBorderRadiusValues: {},
 		};
 	} );
 
@@ -118,10 +120,13 @@ describe( 'Save', () => {
 		} );
 	} );
 
-	it( 'should generate border CSS variables when custom border styling is enabled', () => {
-		defaultAttributes.enableCustomBorder = true;
-		defaultAttributes.customBorderColor = '#123456';
-		defaultAttributes.customBorderWidth = 9;
+	it( 'should generate split border CSS variables from customBorderBox', () => {
+		defaultAttributes.customBorderBox = {
+			top: { width: '0px' },
+			right: { width: '0px' },
+			bottom: { width: '0px' },
+			left: { width: '9px', color: '#123456' },
+		};
 		defaultAttributes.customBorderRadius = 7;
 
 		const { container } = render(
@@ -129,12 +134,9 @@ describe( 'Save', () => {
 		);
 
 		const wrapperDiv = container.firstChild;
-		expect( wrapperDiv ).toHaveStyle(
-			`--admonition-accent-left-color: #123456`
-		);
-		expect( wrapperDiv ).toHaveStyle(
-			`--admonition-accent-left-width: 9px`
-		);
+		expect( wrapperDiv ).toHaveStyle( `--admonition-edge-left-color: #123456` );
+		expect( wrapperDiv ).toHaveStyle( `--admonition-edge-left-width: 9px` );
+		expect( wrapperDiv ).toHaveStyle( `--admonition-edge-top-width: 0px` );
 		expect( wrapperDiv ).toHaveStyle( `--admonition-corner-radius: 7px` );
 	} );
 

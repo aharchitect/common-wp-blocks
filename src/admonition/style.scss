@@ -50,11 +50,8 @@ $admonition-config: (
 
 /* Base class for the entire block (div) */
 .wp-block-common-wp-blocks-admonition {
-    /* Fallback block background color */
-    background-color: var(
-        --admonition-block-bg-custom,
-        var(--admonition-block-bg-color, #ffffff)
-    );
+    /* Keep wrapper transparent; paint backgrounds on bordered containers. */
+    background-color: transparent;
     padding: 0;
 
     /* --- ICON/HEADER STYLES FOR BOTH <DETAILS> AND NON-COLLAPSIBLE --- */
@@ -113,19 +110,33 @@ $admonition-config: (
 
     /* --- COLLAPSIBLE BLOCK STYLES (<DETAILS>/<SUMMARY> STRUCTURE) --- */
     details {
-        border-left-style: solid;
-        border-left-width: var(
-            --admonition-accent-left-width,
-            var(--wp--style--border--width, 5px)
+        background-color: var(
+            --admonition-block-bg-custom,
+            var(--admonition-block-bg-color, #ffffff)
         );
+        border-top-style: var(--admonition-edge-top-style, solid);
+        border-right-style: var(--admonition-edge-right-style, solid);
+        border-bottom-style: var(--admonition-edge-bottom-style, solid);
+        border-left-style: var(--admonition-edge-left-style, solid);
+        border-top-width: var(--admonition-edge-top-width, 0px);
+        border-right-width: var(--admonition-edge-right-width, 0px);
+        border-bottom-width: var(--admonition-edge-bottom-width, 0px);
+        border-left-width: var(
+            --admonition-edge-left-width,
+            var(--admonition-accent-left-width, 5px)
+        );
+        border-top-color: var(--admonition-edge-top-color, transparent);
+        border-right-color: var(--admonition-edge-right-color, transparent);
+        border-bottom-color: var(--admonition-edge-bottom-color, transparent);
         border-left-color: var(
-            --admonition-accent-left-color,
-            var(--wp--style--border--color, #007cba)
+            --admonition-edge-left-color,
+            var(--admonition-accent-left-color, #007cba)
         );
         border-radius: var(
             --admonition-corner-radius,
             var(--wp--style--border--radius, 0)
         );
+        background-clip: padding-box;
         overflow: hidden; /* Ensures content respects border radius if added */
 
         /* Collapsible only styles */
@@ -183,20 +194,34 @@ $admonition-config: (
     /* --- NON-COLLAPSIBLE BLOCK STYLES (DIV/H3 STRUCTURE) ---
        Targets the structure when collapsing is disabled. */
     &[data-is-collapsible="false"] {
-        /* Inherit the details structure styles for appearance consistency */
-        border-left-style: solid;
-        border-left-width: var(
-            --admonition-accent-left-width,
-            var(--wp--style--border--width, 5px)
+        background-color: var(
+            --admonition-block-bg-custom,
+            var(--admonition-block-bg-color, #ffffff)
         );
+        /* Inherit the details structure styles for appearance consistency */
+        border-top-style: var(--admonition-edge-top-style, solid);
+        border-right-style: var(--admonition-edge-right-style, solid);
+        border-bottom-style: var(--admonition-edge-bottom-style, solid);
+        border-left-style: var(--admonition-edge-left-style, solid);
+        border-top-width: var(--admonition-edge-top-width, 0px);
+        border-right-width: var(--admonition-edge-right-width, 0px);
+        border-bottom-width: var(--admonition-edge-bottom-width, 0px);
+        border-left-width: var(
+            --admonition-edge-left-width,
+            var(--admonition-accent-left-width, 5px)
+        );
+        border-top-color: var(--admonition-edge-top-color, transparent);
+        border-right-color: var(--admonition-edge-right-color, transparent);
+        border-bottom-color: var(--admonition-edge-bottom-color, transparent);
         border-left-color: var(
-            --admonition-accent-left-color,
-            var(--wp--style--border--color, #007cba)
+            --admonition-edge-left-color,
+            var(--admonition-accent-left-color, #007cba)
         );
         border-radius: var(
             --admonition-corner-radius,
             var(--wp--style--border--radius, 0)
         );
+        background-clip: padding-box;
         overflow: hidden;
 
         .admonition-header {
