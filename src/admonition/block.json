@@ -9,8 +9,8 @@
 	"description": "A visually distinct, collapsible block for notes, tips, and warnings.",
 	"example": {
 		"attributes": {
-			"type": "note",
-			"title": "A Friendly Note",
+			"type": "info",
+			"title": "Helpful Info",
 			"isCollapsible": true,
 			"isInitiallyExpanded": false
 		},
@@ -25,43 +25,89 @@
 	},
 	"supports": {
 		"html": false,
-		"color": {
-			"text": false,
-			"background": true,
-			"gradients": false,
-			"link": false,
-			"__experimentalBorder": {
-				"color": true,
-				"style": false,
-				"width": false
-			}
-		},
 		"typography": {
 			"fontSize": true
+		},
+		"spacing": {
+			"margin": true,
+			"padding": true,
+			"__experimentalDefaultControls": {
+				"margin": false,
+				"padding": false
+			}
+		}
+	},
+	"selectors": {
+		"root": ".wp-block-common-wp-blocks-admonition",
+		"spacing": {
+			"margin": ".wp-block-common-wp-blocks-admonition[data-is-collapsible=\"true\"] summary.admonition-header, .wp-block-common-wp-blocks-admonition[data-is-collapsible=\"false\"] .admonition-header",
+			"padding": ".wp-block-common-wp-blocks-admonition[data-is-collapsible=\"true\"] summary.admonition-header, .wp-block-common-wp-blocks-admonition[data-is-collapsible=\"false\"] .admonition-header"
 		}
 	},
 	"attributes": {
 		"type": {
 			"type": "string",
-			"default": "note"
+			"default": "info"
 		},
 		"title": {
 			"type": "string",
 			"source": "html",
 			"selector": ".admonition-title",
-			"default": "Note"
+			"default": "Info"
 		},
 		"customIconData": {
 			"type": "string",
 			"default": ""
 		},
+		"hideIcon": {
+			"type": "boolean",
+			"default": false
+		},
 		"isCollapsible": {
 			"type": "boolean",
-			"default": true
+			"default": false
 		},
 		"isInitiallyExpanded": {
 			"type": "boolean",
 			"default": true
+		},
+		"enableCustomBorder": {
+			"type": "boolean",
+			"default": false
+		},
+		"customBlockBgColor": {
+			"type": "string",
+			"default": ""
+		},
+		"customHeaderBgColor": {
+			"type": "string",
+			"default": ""
+		},
+		"customHeaderTextColor": {
+			"type": "string",
+			"default": ""
+		},
+		"customBorderBox": {
+			"type": "object",
+			"default": {
+				"width": "1px"
+			}
+		},
+		"customBorderColor": {
+			"type": "string",
+			"default": ""
+		},
+		"customBorderWidth": {
+			"type": "number",
+			"default": 5
+		},
+		"customBorderRadius": {
+			"type": "number",
+			"default": 0
+		},
+		"customBorderRadiusValues": {
+			"type": "object",
+			"default": {}
 		}
 	},
 	"textdomain": "common-wp-blocks",

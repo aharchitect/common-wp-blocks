@@ -20,16 +20,123 @@ import AdmonitionStructure from './AdmonitionStructure';
  * @return {Element} Element to render.
  */
 export default function save( { attributes } ) {
-	const { type, title, customIconData, isCollapsible, isInitiallyExpanded } =
-		attributes;
+	const {
+		type,
+		title,
+		customIconData,
+		hideIcon,
+		isCollapsible,
+		isInitiallyExpanded,
+		customBlockBgColor,
+		customHeaderBgColor,
+		customHeaderTextColor,
+		customBorderBox,
+		enableCustomBorder,
+		customBorderColor,
+		customBorderWidth,
+		customBorderRadius,
+		customBorderRadiusValues,
+	} = attributes;
 
 	// Apply custom styling for icon masking directly to the block wrapper via blockProps
 	// The CSS variable is used for custom icons, overriding the default.
-	const blockStyle = customIconData
-		? {
-				'--admonition-icon-mask': `url('${ customIconData }')`,
-		  }
-		: {};
+	const blockStyle = {};
+	if ( customIconData ) {
+		blockStyle[ '--admonition-icon-mask' ] = `url('${ customIconData }')`;
+	}
+	if ( customBlockBgColor ) {
+		blockStyle[ '--admonition-block-bg-custom' ] = customBlockBgColor;
+	}
+	if ( customHeaderBgColor ) {
+		blockStyle[ '--admonition-header-bg-custom' ] = customHeaderBgColor;
+	}
+	if ( customHeaderTextColor ) {
+		blockStyle[ '--admonition-header-text-custom' ] = customHeaderTextColor;
+	}
+	const defaultBorderValue = {
+		width: `${ customBorderWidth || 1 }px`,
+	};
+
+	const resolvedBorderValue =
+		customBorderBox && Object.keys( customBorderBox ).length
+			? customBorderBox
+			: defaultBorderValue;
+	const sides = [ 'top', 'right', 'bottom', 'left' ];
+	const hasSplitBorder = sides.some(
+		( side ) =>
+			typeof resolvedBorderValue?.[ side ] === 'object' &&
+			resolvedBorderValue?.[ side ] !== null
+	);
+	const isUniformSplitBorder = hasSplitBorder
+		? [ 'width', 'color', 'style' ].every( ( key ) => {
+				const values = sides.map(
+					( side ) => resolvedBorderValue?.[ side ]?.[ key ] || ''
+				);
+				return values.every( ( value ) => value === values[ 0 ] );
+		  } )
+		: false;
+
+	if ( hasSplitBorder && ! isUniformSplitBorder ) {
+		sides.forEach( ( side ) => {
+			const sideValue = resolvedBorderValue?.[ side ] || {};
+			if ( sideValue.width ) {
+				blockStyle[ `--admonition-edge-${ side }-width` ] =
+					sideValue.width;
+			}
+			if ( sideValue.color ) {
+				blockStyle[ `--admonition-edge-${ side }-color` ] =
+					sideValue.color;
+			}
+			if ( sideValue.style ) {
+				blockStyle[ `--admonition-edge-${ side }-style` ] =
+					sideValue.style;
+			}
+		} );
+	} else {
+		const linkedWidth = isUniformSplitBorder
+			? resolvedBorderValue?.left?.width
+			: resolvedBorderValue?.width;
+		const linkedColor = isUniformSplitBorder
+			? resolvedBorderValue?.left?.color
+			: resolvedBorderValue?.color;
+		const linkedStyle = isUniformSplitBorder
+			? resolvedBorderValue?.left?.style
+			: resolvedBorderValue?.style;
+
+		if ( linkedWidth ) {
+			blockStyle[ '--admonition-edge-left-width' ] = linkedWidth;
+			blockStyle[ '--admonition-edge-top-width' ] = '0px';
+			blockStyle[ '--admonition-edge-right-width' ] = '0px';
+			blockStyle[ '--admonition-edge-bottom-width' ] = '0px';
+		}
+		if ( linkedColor ) {
+			blockStyle[ '--admonition-edge-left-color' ] = linkedColor;
+		}
+		if ( linkedStyle ) {
+			blockStyle[ '--admonition-edge-left-style' ] = linkedStyle;
+		}
+	}
+
+	// Legacy fallback for existing content saved with earlier attributes.
+	if ( enableCustomBorder && customBorderColor ) {
+		blockStyle[ '--admonition-accent-left-color' ] = customBorderColor;
+	}
+	if (
+		customBorderRadiusValues &&
+		Object.keys( customBorderRadiusValues ).length
+	) {
+		const topLeft = customBorderRadiusValues.topLeft || '0px';
+		const topRight = customBorderRadiusValues.topRight || '0px';
+		const bottomRight = customBorderRadiusValues.bottomRight || '0px';
+		const bottomLeft = customBorderRadiusValues.bottomLeft || '0px';
+		blockStyle[
+			'--admonition-corner-radius'
+		] = `${ topLeft } ${ topRight } ${ bottomRight } ${ bottomLeft }`;
+	} else if ( typeof customBorderRadius === 'number' ) {
+		blockStyle[
+			'--admonition-corner-radius'
+		] = `${ customBorderRadius }px`;
+	}
 
 	const blockProps = useBlockProps.save( {
 		className: `admonition-type-${ type }`,
@@ -55,6 +162,7 @@ export default function save( { attributes } ) {
 	// Note: useBlockProps.save should not be modified, so we add to the outer div in AdmonitionStructure.
 	// However, if we put it on the wrapper div, we can easily target it in the SCSS.
 	blockProps[ 'data-is-collapsible' ] = isCollapsible ? 'true' : 'false';
+	blockProps[ 'data-hide-icon' ] = hideIcon ? 'true' : 'false';
 
 	// Determine the 'open' state for the <details> tag
 	// It's only 'open' if it's collapsible AND initially expanded

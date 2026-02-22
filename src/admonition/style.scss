@@ -29,9 +29,9 @@ $admonition-config: (
         icon: 'data:image/png;base64,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'
     ),
     "note": (
-        primary: #46b450,
-        block-bg: #e6ffec,
-        header-bg: #cce0d0,
+        primary: #555555,
+        block-bg: #e0e0e0,
+        header-bg: #c1c1c1,
         icon: "data:image/png;base64,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"
     ),
     "info": (
@@ -50,9 +50,11 @@ $admonition-config: (
 
 /* Base class for the entire block (div) */
 .wp-block-common-wp-blocks-admonition {
-    /* Fallback block background color */
-    background-color: var(--wp--style--color--background, #ffffff);
+    /* Keep wrapper transparent; paint backgrounds on bordered containers. */
+    background-color: transparent;
     padding: 0;
+    box-sizing: border-box;
+    max-width: 100%;
 
     /* --- ICON/HEADER STYLES FOR BOTH <DETAILS> AND NON-COLLAPSIBLE --- */
     .admonition-header {
@@ -60,6 +62,7 @@ $admonition-config: (
         display: flex;
         align-items: center;
         font-weight: bold;
+        box-sizing: border-box;
     }
 
     /* 1. Custom Icon Logic: When custom icon is used (via CSS variable)
@@ -107,11 +110,46 @@ $admonition-config: (
         -webkit-mask-position: center;
     }
 
+    /* Optional setting: hide only the admonition icon, keep collapse arrows untouched. */
+    &[data-hide-icon="true"] summary.admonition-header::before,
+    &[data-hide-icon="true"] .admonition-header::before {
+        content: none !important;
+        display: none !important;
+        width: 0;
+        height: 0;
+        margin-right: 0;
+    }
+
 
     /* --- COLLAPSIBLE BLOCK STYLES (<DETAILS>/<SUMMARY> STRUCTURE) --- */
     details {
-        /* Fallback border color, will be overridden by the type classes below. */
-        border-left: 5px solid var(--wp--style--border--color, #007cba);
+        background-color: var(
+            --admonition-block-bg-custom,
+            var(--admonition-block-bg-color, #ffffff)
+        );
+        border-top-style: var(--admonition-edge-top-style, solid);
+        border-right-style: var(--admonition-edge-right-style, solid);
+        border-bottom-style: var(--admonition-edge-bottom-style, solid);
+        border-left-style: var(--admonition-edge-left-style, solid);
+        border-top-width: var(--admonition-edge-top-width, 0px);
+        border-right-width: var(--admonition-edge-right-width, 0px);
+        border-bottom-width: var(--admonition-edge-bottom-width, 0px);
+        border-left-width: var(
+            --admonition-edge-left-width,
+            var(--admonition-accent-left-width, 5px)
+        );
+        border-top-color: var(--admonition-edge-top-color, transparent);
+        border-right-color: var(--admonition-edge-right-color, transparent);
+        border-bottom-color: var(--admonition-edge-bottom-color, transparent);
+        border-left-color: var(
+            --admonition-edge-left-color,
+            var(--admonition-accent-left-color, #007cba)
+        );
+        border-radius: var(
+            --admonition-corner-radius,
+            var(--wp--style--border--radius, 0)
+        );
+        background-clip: padding-box;
         overflow: hidden; /* Ensures content respects border radius if added */
 
         /* Collapsible only styles */
@@ -121,7 +159,10 @@ $admonition-config: (
 
         summary {
             /* Fallback header background color */
-            background-color: var(--wp--style--border--color, #e6f3ff);
+            background-color: var(
+                --admonition-header-bg-custom,
+                var(--admonition-header-color, #e6f3ff)
+            );
             list-style: none;
             list-style-type: none;
             cursor: pointer;
@@ -130,6 +171,7 @@ $admonition-config: (
             align-items: center;
             position: relative;
             user-select: none; /* Prevent selection of title text on click */
+            box-sizing: border-box;
 
             /* Define the icon space/styles for ::before */
             &::before {
@@ -166,14 +208,45 @@ $admonition-config: (
     /* --- NON-COLLAPSIBLE BLOCK STYLES (DIV/H3 STRUCTURE) ---
        Targets the structure when collapsing is disabled. */
     &[data-is-collapsible="false"] {
+        background-color: var(
+            --admonition-block-bg-custom,
+            var(--admonition-block-bg-color, #ffffff)
+        );
         /* Inherit the details structure styles for appearance consistency */
-        border-left: 5px solid var(--wp--style--border--color, #007cba);
+        border-top-style: var(--admonition-edge-top-style, solid);
+        border-right-style: var(--admonition-edge-right-style, solid);
+        border-bottom-style: var(--admonition-edge-bottom-style, solid);
+        border-left-style: var(--admonition-edge-left-style, solid);
+        border-top-width: var(--admonition-edge-top-width, 0px);
+        border-right-width: var(--admonition-edge-right-width, 0px);
+        border-bottom-width: var(--admonition-edge-bottom-width, 0px);
+        border-left-width: var(
+            --admonition-edge-left-width,
+            var(--admonition-accent-left-width, 5px)
+        );
+        border-top-color: var(--admonition-edge-top-color, transparent);
+        border-right-color: var(--admonition-edge-right-color, transparent);
+        border-bottom-color: var(--admonition-edge-bottom-color, transparent);
+        border-left-color: var(
+            --admonition-edge-left-color,
+            var(--admonition-accent-left-color, #007cba)
+        );
+        border-radius: var(
+            --admonition-corner-radius,
+            var(--wp--style--border--radius, 0)
+        );
+        background-clip: padding-box;
+        overflow: hidden;
 
         .admonition-header {
-            background-color: var(--wp--style--border--color, #e6f3ff);
+            background-color: var(
+                --admonition-header-bg-custom,
+                var(--admonition-header-color, #e6f3ff)
+            );
             padding: 0.5em 1em;
             pointer-events: none; /* Disable interaction on the header */
             cursor: default;
+            box-sizing: border-box;
 
             .admonition-title {
                 margin: 0;
@@ -200,11 +273,15 @@ $admonition-config: (
 
             summary.admonition-header {
                 background-color: var(--admonition-header-color);
-                color: var(--admonition-primary-color);
+                color: var(
+                    --admonition-header-text-color,
+                    var(--admonition-primary-color)
+                );
                 padding: 0.5em 1em;
                 pointer-events: none;
                 cursor: default;
                 list-style: none;
+                box-sizing: border-box;
             }
 
             summary::-webkit-details-marker {
@@ -242,12 +319,26 @@ $admonition-config: (
 
         /* Define a custom property on the block root that can be overridden by user styles */
         --admonition-primary-color: #{$sass-primary};
-        --admonition-header-color: #{$sass-header-bg};
-        --admonition-block-bg-color: #{$sass-block-bg};
+        --admonition-header-text-color: var(
+            --admonition-header-text-custom,
+            #{$sass-primary}
+        );
+        --admonition-header-color: var(
+            --admonition-header-bg-custom,
+            #{$sass-header-bg}
+        );
+        --admonition-block-bg-color: var(
+            --admonition-block-bg-custom,
+            #{$sass-block-bg}
+        );
+        --admonition-accent-left-color: #{$sass-primary};
         --admonition-default-icon: url('#{$sass-icon}');
 
         /* 1. Block wrapper style (affected by user's color picker) */
-        border-left-color: var(--admonition-primary-color);
+        border-left-color: var(
+            --admonition-accent-left-color,
+            var(--admonition-primary-color)
+        );
 
         /* Use a CSS variable for the border, falling back to the SASS value.
               This allows the block color picker to override `--admonition-primary-color`. */
@@ -258,22 +349,28 @@ $admonition-config: (
 
         /* 2. <details> element style */
         details {
-            border-left-color: var(--admonition-primary-color);
+            border-left-color: var(
+                --admonition-accent-left-color,
+                var(--admonition-primary-color)
+            );
 
             summary {
                 /* The key: Apply the background and text color using the variable defined above. */
                 background-color: var(--admonition-header-color);
-                color: var(--admonition-primary-color);
+                color: var(--admonition-header-text-color);
             }
         }
 
         /* 3. Non-collapsible styles */
         &[data-is-collapsible="false"] {
-            border-left-color: var(--admonition-primary-color);
+            border-left-color: var(
+                --admonition-accent-left-color,
+                var(--admonition-primary-color)
+            );
 
             .admonition-header {
                 background-color: var(--admonition-header-color);
-                color: var(--admonition-primary-color);
+                color: var(--admonition-header-text-color);
             }
         }
     }

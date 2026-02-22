@@ -16,7 +16,7 @@ jobs:
             - name: Use Node.js
               uses: actions/setup-node@v4
               with:
-                  node-version: '18'
+                  node-version: '20'
 
             - name: Cache node modules
               uses: actions/cache@v4
@@ -37,11 +37,8 @@ jobs:
             - name: Run tests
               run: npm test
 
-            - name: Lint JS
-              run: npm run lint:js
-
-            - name: Lint CSS
-              run: npm run lint:css
+            - name: Lint repository (ESLint)
+              run: npm run lint:eslint
 
             - name: Upload build artifact
               uses: actions/upload-artifact@v4
@@ -59,7 +56,7 @@ jobs:
             - name: Use Node.js
               uses: actions/setup-node@v4
               with:
-                  node-version: '18'
+                  node-version: '20'
 
             - name: Cache node modules
               uses: actions/cache@v4

@@ -12,8 +12,8 @@ export const ADMONITION_TYPES = {
 	note: {
 		dashicon: 'edit',
 		defaultTitle: 'Note',
-		label: 'Note (Blue)',
-		styles: { primary: '#007cba', blockBg: '#e6f3ff', headerBg: '#cce7ff' },
+		label: 'Note (Grey)',
+		styles: { primary: '#555555', blockBg: '#e0e0e0', headerBg: '#c1c1c1' },
 	},
 	warning: {
 		dashicon: 'warning',

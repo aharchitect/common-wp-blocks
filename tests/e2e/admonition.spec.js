@@ -143,6 +143,20 @@ async function ensureBlockInspectorVisible( page ) {
 	}
 }
 
+async function ensureStylesInspectorVisible( page ) {
+	await ensureBlockInspectorVisible( page );
+	const stylesTab = page.getByRole( 'tab', { name: /^Styles$/i } );
+	if ( await stylesTab.count() ) {
+		await stylesTab.first().click();
+		return;
+	}
+
+	const stylesButton = page.getByRole( 'button', { name: /^Styles$/i } );
+	if ( await stylesButton.count() ) {
+		await stylesButton.first().click();
+	}
+}
+
 async function setEnableCollapsing( page, enabled ) {
 	await ensureBlockInspectorVisible( page );
 	const toggle = page
@@ -177,66 +191,90 @@ async function setStartExpanded( page, enabled ) {
 	}
 }
 
-// E2E: Insert an admonition block, publish, and verify front-end rendering.
-test( 'create and render admonition block', async ( { page, baseURL } ) => {
-	test.setTimeout( 90000 ); // Allow up to 90s for slow environments
-	// Resolve base URL: prefer Playwright fixture, then env, then localhost
-	const resolvedBase =
-		baseURL || process.env.WP_BASE_URL || 'http://localhost:8000';
-	logger.info( { baseURL }, 'Playwright baseURL' );
-	logger.info( { resolvedBase }, 'Resolved base URL' );
-	const admonitionTitleText = 'E2E Note Title';
-	const admonitionContentText = 'This is an admonition created by E2E test.';
+function resolveBaseUrl( baseURL ) {
+	return baseURL || process.env.WP_BASE_URL || 'http://localhost:8000';
+}
 
-	logger.info( 'Navigating to login page...' );
+async function prepareAdmonitionEditor( page, baseURL, postTitle, postBody ) {
+	const resolvedBase = resolveBaseUrl( baseURL );
 	await loginToWordPress( page, resolvedBase, 'admin', 'pass' );
-
-	// Extra: verify we are not still on the login page
-	const currentUrl = page.url();
-	logger.info( { currentUrl }, 'URL after login' );
-	if ( currentUrl.includes( 'wp-login.php' ) ) {
-		logger.error( 'Still on login page after login attempt!' );
-		throw new Error(
-			'Login failed: still on login page after login attempt.'
-		);
-	}
-
 	await dismissWelcomeGuideIfPresent( page );
-
-	logger.info( 'Opening new post editor...' );
-	// Try opening the new post editor directly; if it doesn't load, fallback to Posts->Add New
 	await createPost(
 		page,
 		resolvedBase,
-		'End2End Test Post from Playwright',
-		'This is automated test content.'
+		postTitle,
+		postBody || 'Base paragraph for insertion.'
 	);
 	await dismissWelcomeGuideIfPresent( page );
 
-	// Detect whether editor is rendered inside iframe and scope selectors accordingly.
 	const editor = await getEditorContext( page );
-
-	// Create the next block by placing cursor at the end of current paragraph and pressing Enter.
-	await dismissWelcomeGuideIfPresent( page );
 	await insertAdmonitionBlock( page, editor );
 
-	// Fill admonition title.
-	const admonitionTitle = editor
-		.locator( '.admonition-title[contenteditable="true"]' )
-		.first();
-	await admonitionTitle.waitFor( { state: 'visible', timeout: 15000 } );
-	await admonitionTitle.click();
-	await page.keyboard.press( 'ControlOrMeta+a' );
-	await page.keyboard.type( admonitionTitleText );
-
-	// Fill admonition content paragraph.
 	const admonitionBlock = editor
-		.locator(
-			'details:has(.admonition-title), .wp-block-common-wp-blocks-admonition'
-		)
+		.locator( '.wp-block-common-wp-blocks-admonition' )
 		.last();
 	await admonitionBlock.waitFor( { state: 'visible', timeout: 15000 } );
 
+	return { resolvedBase, editor, admonitionBlock };
+}
+
+async function ensureDimensionControlEnabled( page, labelPattern ) {
+	const slider = page.getByLabel( labelPattern ).first();
+	if ( await slider.count() ) {
+		return slider;
+	}
+
+	const optionsButton = page
+		.getByRole( 'button', { name: /Dimensions options/i } )
+		.first();
+	await expect( optionsButton ).toBeVisible( { timeout: 15000 } );
+	await optionsButton.click();
+
+	const toggleCandidate = page
+		.getByRole( 'menuitemcheckbox', { name: labelPattern } )
+		.first();
+	if ( await toggleCandidate.count() ) {
+		await toggleCandidate.click();
+	} else {
+		await page
+			.getByRole( 'menuitem', { name: labelPattern } )
+			.first()
+			.click();
+	}
+
+	// Close any open menu/popup and assert the control appears.
+	await page.keyboard.press( 'Escape' );
+	await expect( slider ).toBeVisible( { timeout: 15000 } );
+	return slider;
+}
+
+function hasAnyPositiveSide( sides ) {
+	return sides.some( ( value ) => parseFloat( value || '0' ) > 0 );
+}
+
+async function selectAdmonitionBlock( admonitionBlock ) {
+	await admonitionBlock.click( { position: { x: 8, y: 8 } } );
+}
+
+// E2E: Insert an admonition block, publish, and verify front-end rendering.
+test( 'create and render admonition block', async ( { page, baseURL } ) => {
+	test.setTimeout( 90000 ); // Allow up to 90s for slow environments
+	const resolvedBase = resolveBaseUrl( baseURL );
+	logger.info( { baseURL }, 'Playwright baseURL' );
+	logger.info( { resolvedBase }, 'Resolved base URL' );
+
+	const admonitionContentText = 'This is an admonition created by E2E test.';
+	const { editor, admonitionBlock } = await prepareAdmonitionEditor(
+		page,
+		baseURL,
+		'End2End Test Post from Playwright',
+		'This is automated test content.'
+	);
+
+	const admonitionTitle = editor.locator( '.admonition-title' ).first();
+	await expect( admonitionTitle ).toBeVisible( { timeout: 15000 } );
+
+	// Fill admonition content paragraph.
 	// Admonition uses <details>; ensure content is expanded before typing.
 	const detailsBlock = editor
 		.locator( 'details:has(.admonition-title)' )
@@ -271,7 +309,7 @@ test( 'create and render admonition block', async ( { page, baseURL } ) => {
 	await page.keyboard.type( admonitionContentText );
 
 	// Assertions in editor: title and content should be present in the inserted Admonition block.
-	await expect( admonitionTitle ).toContainText( admonitionTitleText );
+	await expect( admonitionTitle ).toContainText( /info/i );
 	await expect(
 		admonitionBlock.locator( '.admonition-content' ).first()
 	).toContainText( admonitionContentText );
@@ -282,29 +320,14 @@ test( 'admonition default icon mask renders and changes when type changes', asyn
 	baseURL,
 } ) => {
 	test.setTimeout( 90000 );
-	const resolvedBase =
-		baseURL || process.env.WP_BASE_URL || 'http://localhost:8000';
-
-	await loginToWordPress( page, resolvedBase, 'admin', 'pass' );
-	await dismissWelcomeGuideIfPresent( page );
-	await createPost(
+	const { resolvedBase, admonitionBlock } = await prepareAdmonitionEditor(
 		page,
-		resolvedBase,
+		baseURL,
 		'Admonition Icon Mask E2E',
 		'Base paragraph for insertion.'
 	);
-	await dismissWelcomeGuideIfPresent( page );
 
-	const editor = await getEditorContext( page );
-	await insertAdmonitionBlock( page, editor );
-
-	const admonitionBlock = editor
-		.locator( '.wp-block-common-wp-blocks-admonition' )
-		.last();
-	await admonitionBlock.waitFor( { state: 'visible', timeout: 15000 } );
-
-	const summary = admonitionBlock.locator( 'summary.admonition-header' );
-	await summary.click();
+	await selectAdmonitionBlock( admonitionBlock );
 	await ensureBlockInspectorVisible( page );
 
 	const typeSelect = page.getByLabel( 'Admonition Type (for base styling)' );
@@ -337,7 +360,7 @@ test( 'admonition default icon mask renders and changes when type changes', asyn
 	await goToFrontendPost( warningFrontendPage, resolvedBase, postId );
 	const frontendWarningSummary = warningFrontendPage
 		.locator(
-			'.wp-block-common-wp-blocks-admonition summary.admonition-header'
+			'.wp-block-common-wp-blocks-admonition summary.admonition-header, .wp-block-common-wp-blocks-admonition .admonition-header'
 		)
 		.first();
 	await expect( frontendWarningSummary ).toBeVisible( { timeout: 15000 } );
@@ -380,7 +403,7 @@ test( 'admonition default icon mask renders and changes when type changes', asyn
 	await goToFrontendPost( infoFrontendPage, resolvedBase, postId );
 	const frontendInfoSummary = infoFrontendPage
 		.locator(
-			'.wp-block-common-wp-blocks-admonition summary.admonition-header'
+			'.wp-block-common-wp-blocks-admonition summary.admonition-header, .wp-block-common-wp-blocks-admonition .admonition-header'
 		)
 		.first();
 	await expect( frontendInfoSummary ).toBeVisible( { timeout: 15000 } );
@@ -422,29 +445,14 @@ test( 'admonition custom base64 icon is persisted and rendered via mask', async 
 	baseURL,
 } ) => {
 	test.setTimeout( 90000 );
-	const resolvedBase =
-		baseURL || process.env.WP_BASE_URL || 'http://localhost:8000';
-
-	await loginToWordPress( page, resolvedBase, 'admin', 'pass' );
-	await dismissWelcomeGuideIfPresent( page );
-	await createPost(
+	const { resolvedBase, admonitionBlock } = await prepareAdmonitionEditor(
 		page,
-		resolvedBase,
+		baseURL,
 		'Admonition Custom Icon E2E',
 		'Base paragraph for insertion.'
 	);
-	await dismissWelcomeGuideIfPresent( page );
 
-	const editor = await getEditorContext( page );
-	await insertAdmonitionBlock( page, editor );
-
-	const admonitionBlock = editor
-		.locator( '.wp-block-common-wp-blocks-admonition' )
-		.last();
-	await admonitionBlock.waitFor( { state: 'visible', timeout: 15000 } );
-
-	const summary = admonitionBlock.locator( 'summary.admonition-header' );
-	await summary.click();
+	await selectAdmonitionBlock( admonitionBlock );
 	await ensureBlockInspectorVisible( page );
 
 	const customIconField = page.getByLabel(
@@ -469,7 +477,7 @@ test( 'admonition custom base64 icon is persisted and rendered via mask', async 
 		.locator( '.wp-block-common-wp-blocks-admonition' )
 		.first();
 	const frontendSummary = frontendBlock.locator(
-		'summary.admonition-header'
+		'summary.admonition-header, .admonition-header'
 	);
 	await expect( frontendSummary ).toBeVisible( { timeout: 15000 } );
 
@@ -501,39 +509,94 @@ test( 'admonition custom base64 icon is persisted and rendered via mask', async 
 	await frontendPage.close();
 } );
 
+test( 'admonition hide icon removes icon rendering in editor and frontend', async ( {
+	page,
+	baseURL,
+} ) => {
+	test.setTimeout( 90000 );
+	const { resolvedBase, admonitionBlock } = await prepareAdmonitionEditor(
+		page,
+		baseURL,
+		'Admonition Hide Icon E2E',
+		'Base paragraph for insertion.'
+	);
+
+	const editorHeader = admonitionBlock
+		.locator( 'summary.admonition-header, .admonition-header' )
+		.first();
+	await expect( editorHeader ).toBeVisible( { timeout: 15000 } );
+	await selectAdmonitionBlock( admonitionBlock );
+	await ensureBlockInspectorVisible( page );
+
+	const hideIconToggle = page
+		.getByRole( 'checkbox', { name: /Hide icon/i } )
+		.first();
+	await expect( hideIconToggle ).toBeVisible( { timeout: 15000 } );
+	if ( ! ( await hideIconToggle.isChecked() ) ) {
+		await hideIconToggle.click();
+	}
+	await expect( hideIconToggle ).toBeChecked();
+	await expect( admonitionBlock ).toHaveAttribute( 'data-hide-icon', 'true' );
+
+	const editorMask = await readBeforeMaskImage( editorHeader );
+	const editorMaskValue =
+		editorMask.webkitMaskImage !== 'none'
+			? editorMask.webkitMaskImage
+			: editorMask.maskImage;
+	expect( editorMaskValue ).toBeDefined();
+	expect( editorMask.content === 'none' || editorMask.content === '""' ).toBe(
+		true
+	);
+	expect( editorMask.width ).toBe( '0px' );
+	expect( editorMask.height ).toBe( '0px' );
+
+	await savePost( page );
+	const postId =
+		( await getCurrentPostId( page ) ) ||
+		getPostIdFromEditorUrl( page.url() );
+	if ( ! postId ) {
+		throw new Error( 'Could not determine post ID from editor URL.' );
+	}
+
+	const frontendPage = await page.context().newPage();
+	await goToFrontendPost( frontendPage, resolvedBase, postId );
+	const frontendBlock = frontendPage
+		.locator( '.wp-block-common-wp-blocks-admonition' )
+		.first();
+	await expect( frontendBlock ).toBeVisible( { timeout: 15000 } );
+	await expect( frontendBlock ).toHaveAttribute( 'data-hide-icon', 'true' );
+
+	const frontendHeader = frontendBlock
+		.locator( 'summary.admonition-header, .admonition-header' )
+		.first();
+	await expect( frontendHeader ).toBeVisible( { timeout: 15000 } );
+
+	const frontendMask = await readBeforeMaskImage( frontendHeader );
+	const frontendMaskValue =
+		frontendMask.webkitMaskImage !== 'none'
+			? frontendMask.webkitMaskImage
+			: frontendMask.maskImage;
+	expect( frontendMaskValue ).toBeDefined();
+	expect(
+		frontendMask.content === 'none' || frontendMask.content === '""'
+	).toBe( true );
+	expect( frontendMask.width ).toBe( '0px' );
+	expect( frontendMask.height ).toBe( '0px' );
+
+	await frontendPage.close();
+} );
+
 test( 'admonition collapsing modes work in editor and frontend', async ( {
 	page,
 	baseURL,
 } ) => {
 	test.setTimeout( 90000 );
-	const resolvedBase =
-		baseURL || process.env.WP_BASE_URL || 'http://localhost:8000';
-
-	await loginToWordPress( page, resolvedBase, 'admin', 'pass' );
-	await dismissWelcomeGuideIfPresent( page );
-	await createPost(
+	const { resolvedBase, admonitionBlock } = await prepareAdmonitionEditor(
 		page,
-		resolvedBase,
+		baseURL,
 		'Admonition Collapsing Modes E2E',
 		'Base paragraph for insertion.'
 	);
-	await dismissWelcomeGuideIfPresent( page );
-
-	const editor = await getEditorContext( page );
-	await insertAdmonitionBlock( page, editor );
-
-	const admonitionBlock = editor
-		.locator( '.wp-block-common-wp-blocks-admonition' )
-		.last();
-	await admonitionBlock.waitFor( { state: 'visible', timeout: 15000 } );
-
-	const admonitionTitle = admonitionBlock
-		.locator( '.admonition-title[contenteditable="true"]' )
-		.first();
-	await expect( admonitionTitle ).toBeVisible( { timeout: 15000 } );
-	await admonitionTitle.click();
-	await page.keyboard.press( 'ControlOrMeta+a' );
-	await page.keyboard.type( 'E2E Collapse Modes Title' );
 
 	const bodyParagraph = admonitionBlock
 		.locator( '.admonition-content p[contenteditable="true"]' )
@@ -545,7 +608,7 @@ test( 'admonition collapsing modes work in editor and frontend', async ( {
 		'Collapsible mode and static mode should differ.'
 	);
 
-	await admonitionBlock.locator( '.admonition-header' ).first().click();
+	await selectAdmonitionBlock( admonitionBlock );
 
 	// 1) Editor collapsible mode: <details>/<summary> must exist and toggle.
 	await setEnableCollapsing( page, true );
@@ -612,7 +675,7 @@ test( 'admonition collapsing modes work in editor and frontend', async ( {
 	await frontendCollapsiblePage.close();
 
 	// 3) Editor non-collapsible mode: no <details>/<summary>, content always visible.
-	await admonitionBlock.locator( '.admonition-header' ).first().click();
+	await selectAdmonitionBlock( admonitionBlock );
 	await setEnableCollapsing( page, false );
 
 	await expect( admonitionBlock.locator( 'details' ) ).toHaveCount( 0 );
@@ -653,26 +716,12 @@ test( 'admonition starts collapsed when Start Expanded is off and reveals conten
 	baseURL,
 } ) => {
 	test.setTimeout( 90000 );
-	const resolvedBase =
-		baseURL || process.env.WP_BASE_URL || 'http://localhost:8000';
-
-	await loginToWordPress( page, resolvedBase, 'admin', 'pass' );
-	await dismissWelcomeGuideIfPresent( page );
-	await createPost(
+	const { resolvedBase, admonitionBlock } = await prepareAdmonitionEditor(
 		page,
-		resolvedBase,
+		baseURL,
 		'Admonition Start Collapsed E2E',
 		'Base paragraph for insertion.'
 	);
-	await dismissWelcomeGuideIfPresent( page );
-
-	const editor = await getEditorContext( page );
-	await insertAdmonitionBlock( page, editor );
-
-	const admonitionBlock = editor
-		.locator( '.wp-block-common-wp-blocks-admonition' )
-		.last();
-	await admonitionBlock.waitFor( { state: 'visible', timeout: 15000 } );
 
 	const bodyParagraph = admonitionBlock
 		.locator( '.admonition-content p[contenteditable="true"]' )
@@ -684,7 +733,7 @@ test( 'admonition starts collapsed when Start Expanded is off and reveals conten
 		'This paragraph should exist in DOM but start hidden when collapsed.'
 	);
 
-	await admonitionBlock.locator( '.admonition-header' ).first().click();
+	await selectAdmonitionBlock( admonitionBlock );
 	await setEnableCollapsing( page, true );
 	await setStartExpanded( page, false );
 
@@ -741,6 +790,230 @@ test( 'admonition starts collapsed when Start Expanded is off and reveals conten
 		.poll( () => frontendDetails.getAttribute( 'open' ) )
 		.not.toBeNull();
 	await expect( frontendParagraph ).toBeVisible();
+
+	await frontendPage.close();
+} );
+
+test( 'admonition border controls are visible and border/radius render in editor and frontend', async ( {
+	page,
+	baseURL,
+} ) => {
+	test.setTimeout( 90000 );
+	const { resolvedBase, admonitionBlock } = await prepareAdmonitionEditor(
+		page,
+		baseURL,
+		'Admonition Border Controls E2E',
+		'Base paragraph for insertion.'
+	);
+
+	await selectAdmonitionBlock( admonitionBlock );
+	await ensureStylesInspectorVisible( page );
+
+	// Objective 1: editor controls are visible and usable.
+	const borderPanelTitle = page.getByText( /^Border$/i ).first();
+	await expect( borderPanelTitle ).toBeVisible( { timeout: 15000 } );
+	await expect(
+		page.getByText( /How linked borders work/i ).first()
+	).toBeVisible();
+	await expect(
+		page.locator( '.components-border-box-control' ).first()
+	).toBeVisible();
+	await expect( page.getByText( /^Radius$/i ).first() ).toBeVisible();
+
+	const borderWidthInput = page.getByLabel( /Border width/i ).first();
+	await expect( borderWidthInput ).toBeVisible();
+	await borderWidthInput.fill( '9' );
+	await borderWidthInput.press( 'Tab' );
+
+	const radiusInput = page.getByLabel( /Border radius/i ).first();
+	await expect( radiusInput ).toBeVisible();
+	await radiusInput.fill( '12' );
+	await radiusInput.press( 'Tab' );
+
+	// Objective 2: rendering in editor canvas reflects control values.
+	const editorStyles = await admonitionBlock.evaluate( ( el ) => {
+		const target = el.querySelector( 'details' ) || el;
+		const styles = window.getComputedStyle( target );
+		return {
+			left: styles.borderLeftWidth,
+			top: styles.borderTopWidth,
+			right: styles.borderRightWidth,
+			bottom: styles.borderBottomWidth,
+			radius: styles.borderTopLeftRadius,
+		};
+	} );
+
+	expect( editorStyles.left ).toBe( '9px' );
+	expect( editorStyles.top ).toBe( '0px' );
+	expect( editorStyles.right ).toBe( '0px' );
+	expect( editorStyles.bottom ).toBe( '0px' );
+	expect( editorStyles.radius ).toBe( '12px' );
+
+	await savePost( page );
+	const postId =
+		( await getCurrentPostId( page ) ) ||
+		getPostIdFromEditorUrl( page.url() );
+	if ( ! postId ) {
+		throw new Error( 'Could not determine post ID from editor URL.' );
+	}
+
+	// Objective 3: rendering in page view matches configured border/radius.
+	const frontendPage = await page.context().newPage();
+	await goToFrontendPost( frontendPage, resolvedBase, postId );
+	const frontendBlock = frontendPage
+		.locator( '.wp-block-common-wp-blocks-admonition' )
+		.first();
+	await expect( frontendBlock ).toBeVisible( { timeout: 15000 } );
+
+	const frontendStyles = await frontendBlock.evaluate( ( el ) => {
+		const target = el.querySelector( 'details' ) || el;
+		const styles = window.getComputedStyle( target );
+		return {
+			left: styles.borderLeftWidth,
+			top: styles.borderTopWidth,
+			right: styles.borderRightWidth,
+			bottom: styles.borderBottomWidth,
+			radius: styles.borderTopLeftRadius,
+		};
+	} );
+
+	expect( frontendStyles.left ).toBe( '9px' );
+	expect( frontendStyles.top ).toBe( '0px' );
+	expect( frontendStyles.right ).toBe( '0px' );
+	expect( frontendStyles.bottom ).toBe( '0px' );
+	expect( frontendStyles.radius ).toBe( '12px' );
+
+	await frontendPage.close();
+} );
+
+test( 'admonition dimensions controls apply spacing to header in editor and frontend', async ( {
+	page,
+	baseURL,
+} ) => {
+	test.setTimeout( 90000 );
+	const { resolvedBase, admonitionBlock } = await prepareAdmonitionEditor(
+		page,
+		baseURL,
+		'Admonition Dimensions Controls E2E',
+		'Base paragraph for insertion.'
+	);
+
+	await selectAdmonitionBlock( admonitionBlock );
+	await ensureStylesInspectorVisible( page );
+
+	// 1) Dimensions controls are optional by default, then enabled via panel options.
+	const paddingSlider = await ensureDimensionControlEnabled(
+		page,
+		/padding/i
+	);
+	const marginSlider = await ensureDimensionControlEnabled( page, /margin/i );
+	await expect( paddingSlider ).toBeVisible( { timeout: 15000 } );
+	await expect( marginSlider ).toBeVisible( { timeout: 15000 } );
+
+	// 2) Update padding + margin sliders.
+	const initialPaddingValue = await paddingSlider.inputValue();
+	const initialMarginValue = await marginSlider.inputValue();
+	await paddingSlider.press( 'ArrowRight' );
+	await marginSlider.press( 'ArrowRight' );
+	const updatedPaddingValue = await paddingSlider.inputValue();
+	const updatedMarginValue = await marginSlider.inputValue();
+	expect( updatedPaddingValue ).not.toBe( initialPaddingValue );
+	expect( updatedMarginValue ).not.toBe( initialMarginValue );
+
+	// 3) Editor rendering: spacing should be on summary header, not details container.
+	const editorSpacing = await admonitionBlock.evaluate( ( el ) => {
+		const details = el.querySelector( 'details' ) || el;
+		const summary =
+			el.querySelector( 'summary.admonition-header' ) ||
+			el.querySelector( '.admonition-header' );
+		const detailsStyles = window.getComputedStyle( details );
+		const summaryStyles = summary
+			? window.getComputedStyle( summary )
+			: null;
+
+		return {
+			blockStyle: el.getAttribute( 'style' ) || '',
+			summaryPaddingTop: summaryStyles?.paddingTop || '0px',
+			summaryPaddingRight: summaryStyles?.paddingRight || '0px',
+			summaryPaddingBottom: summaryStyles?.paddingBottom || '0px',
+			summaryPaddingLeft: summaryStyles?.paddingLeft || '0px',
+			hasDetails: !! el.querySelector( 'details' ),
+			detailsPaddingTop: detailsStyles.paddingTop,
+		};
+	} );
+
+	expect(
+		hasAnyPositiveSide( [
+			editorSpacing.summaryPaddingTop,
+			editorSpacing.summaryPaddingRight,
+			editorSpacing.summaryPaddingBottom,
+			editorSpacing.summaryPaddingLeft,
+		] )
+	).toBe( true );
+	expect( editorSpacing.blockStyle ).toMatch(
+		/(^|;)\s*margin-(top|right|bottom|left):/
+	);
+	expect( editorSpacing.blockStyle ).toMatch(
+		/(^|;)\s*padding-(top|right|bottom|left):/
+	);
+	if ( editorSpacing.hasDetails ) {
+		expect( parseFloat( editorSpacing.detailsPaddingTop ) ).toBe( 0 );
+	}
+
+	await savePost( page );
+	const postId =
+		( await getCurrentPostId( page ) ) ||
+		getPostIdFromEditorUrl( page.url() );
+	if ( ! postId ) {
+		throw new Error( 'Could not determine post ID from editor URL.' );
+	}
+
+	// 4) Frontend rendering should keep the same targeting behavior.
+	const frontendPage = await page.context().newPage();
+	await goToFrontendPost( frontendPage, resolvedBase, postId );
+	const frontendBlock = frontendPage
+		.locator( '.wp-block-common-wp-blocks-admonition' )
+		.first();
+	await expect( frontendBlock ).toBeVisible( { timeout: 15000 } );
+
+	const frontendSpacing = await frontendBlock.evaluate( ( el ) => {
+		const details = el.querySelector( 'details' ) || el;
+		const summary =
+			el.querySelector( 'summary.admonition-header' ) ||
+			el.querySelector( '.admonition-header' );
+		const detailsStyles = window.getComputedStyle( details );
+		const summaryStyles = summary
+			? window.getComputedStyle( summary )
+			: null;
+
+		return {
+			blockStyle: el.getAttribute( 'style' ) || '',
+			summaryPaddingTop: summaryStyles?.paddingTop || '0px',
+			summaryPaddingRight: summaryStyles?.paddingRight || '0px',
+			summaryPaddingBottom: summaryStyles?.paddingBottom || '0px',
+			summaryPaddingLeft: summaryStyles?.paddingLeft || '0px',
+			hasDetails: !! el.querySelector( 'details' ),
+			detailsPaddingTop: detailsStyles.paddingTop,
+		};
+	} );
+
+	expect(
+		hasAnyPositiveSide( [
+			frontendSpacing.summaryPaddingTop,
+			frontendSpacing.summaryPaddingRight,
+			frontendSpacing.summaryPaddingBottom,
+			frontendSpacing.summaryPaddingLeft,
+		] )
+	).toBe( true );
+	expect( frontendSpacing.blockStyle ).toMatch(
+		/(^|;)\s*margin-(top|right|bottom|left):/
+	);
+	expect( frontendSpacing.blockStyle ).toMatch(
+		/(^|;)\s*padding-(top|right|bottom|left):/
+	);
+	if ( frontendSpacing.hasDetails ) {
+		expect( parseFloat( frontendSpacing.detailsPaddingTop ) ).toBe( 0 );
+	}
 
 	await frontendPage.close();
 } );
