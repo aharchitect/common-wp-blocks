@@ -21,7 +21,7 @@
 		"start": "wp-scripts start --webpack-copy-php --output-path=build/admonition src/admonition/index.js"
 	},
 	"devDependencies": {
-		"@eslint/css": "^0.14.1",
+		"@eslint/css": "^1.1.0",
 		"@eslint/js": "^10.0.1",
 		"@eslint/json": "^1.0.1",
 		"@eslint/markdown": "^8.0.0",
