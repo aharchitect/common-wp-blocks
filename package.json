@@ -29,7 +29,7 @@
 		"@wordpress/e2e-test-utils-playwright": "^1.36.0",
 		"@wordpress/scripts": "^31.8.0",
 		"eslint": "^10.2.0",
-		"globals": "^17.4.0",
+		"globals": "^17.5.0",
 		"jest-transform-stub": "^2.0.0",
 		"playwright": "1.58.2",
 		"postcss-scss": "^4.0.9"
